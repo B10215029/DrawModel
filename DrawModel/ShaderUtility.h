@@ -2,6 +2,12 @@
 //#pragma warning(disable:4996)
 #include <GL/glew.h>
 
+// 只讀取圖片的大小
+void getTextureSize(const char* filePath, int size[2]);
+
+// 讀取圖片並建立Texture(使用libpng)
+GLuint loadTextureFromFilePNG(const char* filePath);
+
 // 讀取圖片並建立Texture
 GLuint loadTextureFromArray(const unsigned char* data, int width, int height, int format);
 

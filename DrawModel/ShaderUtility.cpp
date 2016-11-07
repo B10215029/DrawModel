@@ -4,6 +4,7 @@
 #include <fstream>
 #include <Windows.h>
 #include <GL/glew.h>
+#include <libpng/png.h>
 
 GLuint loadTextureFromArray(const unsigned char* data, int width, int height, int format)
 {
@@ -162,4 +163,92 @@ GLuint loadProgram(const int vertexShaderResourceId, const int fragmentShaderRes
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 	return program;
+}
+
+void getTextureSize(const char* filePath, int size[2]) {
+	png_structp png_ptr;
+	png_infop info_ptr;
+
+	unsigned char header[8];    // 8 is the maximum size that can be checked
+	FILE *fp = fopen(filePath, "rb"); // open file and test for it being a png
+	if (!fp) printf("[read_png_file] File %s could not be opened for reading\n", filePath);
+	fread(header, 1, 8, fp);
+	if (png_sig_cmp(header, 0, 8)) printf("[read_png_file] File %s is not recognized as a PNG file\n", filePath);
+
+	/* initialize stuff */
+	png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+	if (!png_ptr) printf("[read_png_file] png_create_read_struct failed\n");
+	info_ptr = png_create_info_struct(png_ptr);
+	if (!info_ptr) printf("[read_png_file] png_create_info_struct failed\n");
+	if (setjmp(png_jmpbuf(png_ptr))) printf("[read_png_file] Error during init_io\n");
+
+	png_init_io(png_ptr, fp);
+	png_set_sig_bytes(png_ptr, 8);
+
+	png_read_info(png_ptr, info_ptr);
+
+	size[0] = png_get_image_width(png_ptr, info_ptr);
+	size[1] = png_get_image_height(png_ptr, info_ptr);
+
+	fclose(fp);
+}
+
+GLuint loadTextureFromFilePNG(const char* filePath)
+{
+	int width, height;
+	png_byte color_type;
+	png_byte bit_depth;
+
+	png_structp png_ptr;
+	png_infop info_ptr;
+	int number_of_passes;
+	png_bytep * row_pointers;
+
+	unsigned char header[8];    // 8 is the maximum size that can be checked
+	FILE *fp = fopen(filePath, "rb"); // open file and test for it being a png
+	if (!fp) printf("[read_png_file] File %s could not be opened for reading\n", filePath);
+	fread(header, 1, 8, fp);
+	if (png_sig_cmp(header, 0, 8)) printf("[read_png_file] File %s is not recognized as a PNG file\n", filePath);
+
+	/* initialize stuff */
+	png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+	if (!png_ptr) printf("[read_png_file] png_create_read_struct failed\n");
+	info_ptr = png_create_info_struct(png_ptr);
+	if (!info_ptr) printf("[read_png_file] png_create_info_struct failed\n");
+	if (setjmp(png_jmpbuf(png_ptr))) printf("[read_png_file] Error during init_io\n");
+
+	png_init_io(png_ptr, fp);
+	png_set_sig_bytes(png_ptr, 8);
+
+	png_read_info(png_ptr, info_ptr);
+
+	width = png_get_image_width(png_ptr, info_ptr);
+	height = png_get_image_height(png_ptr, info_ptr);
+	color_type = png_get_color_type(png_ptr, info_ptr);
+	bit_depth = png_get_bit_depth(png_ptr, info_ptr);
+
+	number_of_passes = png_set_interlace_handling(png_ptr);
+	png_read_update_info(png_ptr, info_ptr);
+
+	/* read file */
+	if (setjmp(png_jmpbuf(png_ptr))) printf("[read_png_file] Error during read_image\n");
+	row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * height);
+	row_pointers[0] = (png_byte*)malloc(png_get_rowbytes(png_ptr, info_ptr) * sizeof(png_bytep) * height);
+	for (int y = 0; y<height; y++)
+		row_pointers[y] = row_pointers[0] + png_get_rowbytes(png_ptr, info_ptr) / sizeof(png_byte) * y;
+	png_read_image(png_ptr, row_pointers);
+	fclose(fp);
+
+	GLuint textureHandle;
+	glGenTextures(1, &textureHandle);
+	glBindTexture(GL_TEXTURE_2D, textureHandle);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	if (png_get_color_type(png_ptr, info_ptr) == PNG_COLOR_TYPE_RGB)
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, *row_pointers);
+	if (png_get_color_type(png_ptr, info_ptr) == PNG_COLOR_TYPE_RGBA)
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, *row_pointers);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	return textureHandle;
 }
