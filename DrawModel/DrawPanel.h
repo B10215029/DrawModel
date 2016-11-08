@@ -18,6 +18,8 @@ public:
 	void MouseWheel(int x, int y, int delta);
 	void AddPoint(float x, float y, float z);
 
+	bool cleanStroke;
+
 private:
 	glm::ivec2 previousMousePosition;
 	glm::mat4 modelMatrix;
@@ -29,7 +31,14 @@ private:
 	GLuint modelMatrixLocation;
 	GLuint viewMatrixLocation;
 	GLuint projectionMatrixLocation;
-	GLuint colorLocation;
-	std::vector<glm::vec3> points;
+	GLuint fboTextureLocation;
 
+	GLuint strokeProgram;
+	GLuint strokeTextureLocation;
+	GLuint strokeColorLocation;
+	GLuint strokeFBO;
+	GLuint strokeFBOColorTexture;
+	GLuint strokeTextureHandle;
+	std::vector<glm::vec3> points;
+	std::vector<glm::vec3> pointQueue;
 };

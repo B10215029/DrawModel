@@ -67,24 +67,31 @@ namespace DrawModel {
 			this->panel1->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->panel1->Location = System::Drawing::Point(0, 0);
 			this->panel1->Name = L"panel1";
-			this->panel1->Size = System::Drawing::Size(284, 261);
+			this->panel1->Size = System::Drawing::Size(784, 561);
 			this->panel1->TabIndex = 0;
 			// 
 			// timer1
 			// 
 			this->timer1->Enabled = true;
+			this->timer1->Interval = 10;
 			// 
 			// MainForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 12);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(284, 261);
+			this->ClientSize = System::Drawing::Size(784, 561);
 			this->Controls->Add(this->panel1);
 			this->Name = L"MainForm";
 			this->Text = L"Draw Model";
+			this->KeyDown += gcnew System::Windows::Forms::KeyEventHandler(this, &MainForm::MainForm_KeyDown);
 			this->ResumeLayout(false);
 
 		}
 #pragma endregion
+	private: System::Void MainForm_KeyDown(System::Object^  sender, System::Windows::Forms::KeyEventArgs^  e) {
+		if (e->KeyCode == Keys::Space) {
+			drawPanel->cleanStroke = true;
+		}
+	}
 	};
 }

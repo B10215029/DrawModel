@@ -247,7 +247,7 @@ GLuint loadTextureFromFilePNG(const char* filePath)
 	if (png_get_color_type(png_ptr, info_ptr) == PNG_COLOR_TYPE_RGB)
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, *row_pointers);
 	if (png_get_color_type(png_ptr, info_ptr) == PNG_COLOR_TYPE_RGBA)
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, *row_pointers);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, *row_pointers);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	return textureHandle;

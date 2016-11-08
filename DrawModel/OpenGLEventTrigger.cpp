@@ -2,6 +2,8 @@
 
 OpenGLEventTrigger::OpenGLEventTrigger(System::Windows::Forms::Panel^ panel, System::Windows::Forms::Timer^ timer, OpenGLPanel* drawer) : panel(panel), timer(timer), drawer(drawer)
 {
+	drawer->width = panel->Width;
+	drawer->height = panel->Height;
 	drawer->SetPanel((HWND)(panel->Handle.ToInt32()));
 	drawer->CallReshape(panel->Width, panel->Height);
 
