@@ -3,6 +3,8 @@
 #include <GL\glew.h>
 #include <glm\glm.hpp>
 #include <vector>
+#include <deque>
+#include "ModelPart.h"
 
 class DrawPanel : public OpenGLPanel
 {
@@ -16,7 +18,7 @@ public:
 	void MouseUp(int x, int y, int button);
 	void MouseMove(int x, int y);
 	void MouseWheel(int x, int y, int delta);
-	void AddPoint(float x, float y, float z);
+	void RemovePart(int id);
 
 	bool cleanStroke;
 
@@ -41,4 +43,5 @@ private:
 	GLuint strokeTextureHandle;
 	std::vector<glm::vec3> points;
 	std::vector<glm::vec3> pointQueue;
+	std::deque<ModelPart*> parts;
 };

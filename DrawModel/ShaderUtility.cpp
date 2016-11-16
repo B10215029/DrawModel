@@ -117,7 +117,7 @@ GLuint loadProgram(const char* vertexShaderFilePath, const char* fragmentShaderF
 	int linked;
 	glGetProgramiv(program, GL_LINK_STATUS, &linked);
 	if (!linked) {
-		std::cout << "Error linking program" << std::endl;
+		std::cout << "Error linking program, " << vertexShaderFilePath << " and " << fragmentShaderFilePath << std::endl;
 		GLint infoLen = 0;
 		glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLen);
 		if (infoLen > 1)
