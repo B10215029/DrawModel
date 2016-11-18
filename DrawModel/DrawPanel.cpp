@@ -103,21 +103,25 @@ void DrawPanel::MouseDown(int x, int y, int button)
 {
 	previousMousePosition.x = x;
 	previousMousePosition.y = y;
-	parts.push_back(new ModelPart());
-	Bind();
-	parts.back()->CreateFrameBuffer(width, height);
-	glm::vec3 screenPos(x, height - y, 0);
-	glReadBuffer(GL_FRONT);
-	glReadPixels(screenPos.x, screenPos.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &screenPos.z);
-	screenPos.z = 0;
-	glm::vec3 worldPos = glm::unProject(screenPos, modelMatrix, projectionMatrix, glm::vec4(0, 0, width, height));
-	parts.back()->AddPoint(worldPos.x, worldPos.y, worldPos.z);
-	Release();
+	if (button == 0) {
+		parts.push_back(new ModelPart());
+		Bind();
+		parts.back()->CreateFrameBuffer(width, height);
+		glm::vec3 screenPos(x, height - y, 0);
+		glReadBuffer(GL_FRONT);
+		glReadPixels(screenPos.x, screenPos.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &screenPos.z);
+		screenPos.z = 0;
+		glm::vec3 worldPos = glm::unProject(screenPos, modelMatrix, projectionMatrix, glm::vec4(0, 0, width, height));
+		parts.back()->AddPoint(worldPos.x, worldPos.y, worldPos.z);
+		Release();
+	}
 }
 
 void DrawPanel::MouseUp(int x, int y, int button)
 {
-
+	if (button == 0) {
+		parts.back()->CreateMesh();
+	}
 }
 
 void DrawPanel::MouseMove(int x, int y)

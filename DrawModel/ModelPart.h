@@ -32,10 +32,13 @@ public:
 	~ModelPart();
 	void Render();
 	void RenderStroke();
+	void RenderLine();
+	void RenderPoint();
 	void RenderModel();
 	void AddPoint(float x, float y, float z);
 	void AddPoint(glm::vec3 point);
 	void CreateFrameBuffer(int width, int height);
+	void CreateMesh();
 
 
 private:
@@ -43,6 +46,10 @@ private:
 		GLuint program;
 		GLuint textureLocation;
 	} drawTexture;
+	static struct DrawColorProgram {
+		GLuint program;
+		GLuint colorLocation;
+	} drawColor;
 	static struct DrawStrokeProgram {
 		GLuint program;
 		GLuint strokeSizeLocation;

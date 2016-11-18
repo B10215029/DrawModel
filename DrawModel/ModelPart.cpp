@@ -3,6 +3,7 @@
 #include <glm\gtc\type_ptr.hpp>
 
 struct ModelPart::DrawTextureProgram ModelPart::drawTexture = {};
+struct ModelPart::DrawColorProgram ModelPart::drawColor = {};
 struct ModelPart::DrawStrokeProgram ModelPart::drawStroke = {};
 struct ModelPart::DrawSolidProgram ModelPart::drawSolid = {};
 glm::vec4 ModelPart::strokeColor(0, 0, 1, 1);
@@ -17,6 +18,8 @@ void ModelPart::InitProgram()
 {
 	drawTexture.program = loadProgram("./shader/DrawTexture.vert", "./shader/DrawTexture.frag");
 	drawTexture.textureLocation = glGetUniformLocation(drawTexture.program, "image");
+	drawColor.program = loadProgram("./shader/DrawColor.vert", "./shader/DrawColor.frag");
+	drawColor.colorLocation = glGetUniformLocation(drawColor.program, "color");
 	drawStroke.program = loadProgram("./shader/DrawStroke.vert", "./shader/DrawStroke.frag");
 	drawStroke.strokeSizeLocation = glGetUniformLocation(drawStroke.program, "strokeSize");
 	drawStroke.colorLocation = glGetUniformLocation(drawStroke.program, "color");
@@ -44,7 +47,9 @@ ModelPart::~ModelPart()
 
 void ModelPart::Render()
 {
-	RenderStroke();
+	//RenderStroke();
+	RenderLine();
+	RenderPoint();
 }
 
 void ModelPart::RenderStroke()
@@ -78,6 +83,33 @@ void ModelPart::RenderStroke()
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
+void ModelPart::RenderLine()
+{
+	glLineWidth(3);
+	glBindVertexArray(0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_DEPTH_BUFFER_BIT);
+	glUseProgram(drawColor.program);
+	glUniform4fv(drawColor.colorLocation, 1, glm::value_ptr(glm::vec4(1, 0, 0, 1)));
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, &points[0]);
+	glDrawArrays(GL_LINE_LOOP, 0, points.size());
+
+}
+
+void ModelPart::RenderPoint()
+{
+	glPointSize(5);
+	glBindVertexArray(0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_DEPTH_BUFFER_BIT);
+	glUseProgram(drawColor.program);
+	glUniform4fv(drawColor.colorLocation, 1, glm::value_ptr(glm::vec4(0, 1, 0, 1)));
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, &points[0]);
+	glDrawArrays(GL_POINTS, 0, points.size());
+}
+
 void ModelPart::RenderModel()
 {
 
@@ -99,6 +131,11 @@ void ModelPart::CreateFrameBuffer(int width, int height)
 	glClear(GL_COLOR_BUFFER_BIT);
 	glClearColor(clrCol[0], clrCol[1], clrCol[2], clrCol[3]);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void ModelPart::CreateMesh()
+{
+	printf("CreateMesh\n");
 }
 
 void ModelPart::AddPoint(float x, float y, float z)
