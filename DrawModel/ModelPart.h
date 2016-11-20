@@ -39,6 +39,7 @@ public:
 	void AddPoint(glm::vec3 point);
 	void CreateFrameBuffer(int width, int height);
 	void CreateMesh();
+	void UpdateMeshBuffer();
 
 
 private:
@@ -64,8 +65,11 @@ private:
 		GLuint projectionMatrixLocation;
 	} drawSolid;
 
+	GLuint vao, vbo, ebo;
+	int vertexCount, faceCount;
+	float maxPointDist;
 	ModelState state;
-	MyMesh mesh;
+	MyMesh* mesh;
 	GLuint strokeFBO;
 	GLuint strokeFBOColorTexture;
 	std::vector<glm::vec3> points;

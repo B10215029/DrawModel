@@ -1,6 +1,9 @@
 #include "MyMesh.h"
+#undef min
+#undef max
 #include <iostream>
 #include <ctime>
+#include <Eigen/Sparse>
 
 OpenMesh::EPropHandleT<double> MyMesh::edgeWeight;
 OpenMesh::VPropHandleT<double> MyMesh::oneRingArea;
@@ -15,6 +18,23 @@ MyMesh::MyMesh()
 MyMesh::~MyMesh()
 {
 
+}
+
+MyMesh* MyMesh::CreateFace(std::vector<glm::vec3> contourPoints)
+{
+	MyMesh* mesh = new MyMesh();
+
+	OpenMesh::IO::Options options;
+	if (OpenMesh::IO::read_mesh(*mesh, "./neptune_reduce.obj", options)) {
+		if (!options.check(OpenMesh::IO::Options::VertexNormal) && mesh->has_vertex_normals()) {
+			mesh->update_normals();
+		}
+	}
+	else {
+		std::cerr << "read error\n";
+		delete mesh;
+	}
+	return mesh;
 }
 
 void MyMesh::Extraction(float s)
@@ -175,4 +195,14 @@ double MyMesh::one_ring_area(VertexHandle vh)
 		area += face_area(vf_it);
 	}
 	return area;
+}
+
+void MyMesh::Extrude(float thickness, int divisions)
+{
+
+}
+
+void MyMesh::Smooth()
+{
+
 }

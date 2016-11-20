@@ -226,7 +226,9 @@ namespace DrawModel {
 		}
 	}
 	private: System::Void panel1_MouseDown(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
-		listBox1->Items->Add(String::Format("New Item {0}", listBox1->Items->Count));
+		if (e->Button == System::Windows::Forms::MouseButtons::Left) {
+			listBox1->Items->Add(String::Format("New Item {0}", listBox1->Items->Count));
+		}
 	}
 private: System::Void label1_Click(System::Object^  sender, System::EventArgs^  e) {
 	if (colorDialog1->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
@@ -253,9 +255,9 @@ private: System::Void textBox2_TextChanged(System::Object^  sender, System::Even
 }
 private: System::Void button1_Click(System::Object^  sender, System::EventArgs^  e) {
 	if (openFileDialog1->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
-		drawPanel->Bind();
+		drawPanel->BindGL();
 		ModelPart::SetStrokeTextureFromFile((const char*)(System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(openFileDialog1->FileName)).ToPointer());
-		drawPanel->Release();
+		drawPanel->ReleaseGL();
 	}
 }
 private: System::Void button2_Click(System::Object^  sender, System::EventArgs^  e) {

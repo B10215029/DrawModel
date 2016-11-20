@@ -7,9 +7,9 @@
 DrawPanel::DrawPanel()
 {
 	points.clear();
-	modelMatrix = glm::mat4(1.0f);
-	viewMatrix = glm::mat4(1.0f);
-	projectionMatrix = glm::mat4(1.0f);
+	ModelPart::modelMatrix = glm::mat4(1.0f);
+	ModelPart::viewMatrix = glm::translate(glm::mat4(1.0f), transform);
+	ModelPart::projectionMatrix = glm::mat4(1.0f);
 	cleanStroke = true;
 }
 
@@ -56,7 +56,7 @@ void DrawPanel::Initialize()
 void DrawPanel::Reshape(int width, int height)
 {
 	glViewport(0, 0, width, height);
-	glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 10000.f);
+	ModelPart::projectionMatrix = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 1000.f);
 }
 
 void DrawPanel::Display()
@@ -101,26 +101,29 @@ void DrawPanel::Display()
 
 void DrawPanel::MouseDown(int x, int y, int button)
 {
-	previousMousePosition.x = x;
-	previousMousePosition.y = y;
 	if (button == 0) {
 		parts.push_back(new ModelPart());
-		Bind();
+		BindGL();
 		parts.back()->CreateFrameBuffer(width, height);
 		glm::vec3 screenPos(x, height - y, 0);
 		glReadBuffer(GL_FRONT);
 		glReadPixels(screenPos.x, screenPos.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &screenPos.z);
 		screenPos.z = 0;
-		glm::vec3 worldPos = glm::unProject(screenPos, modelMatrix, projectionMatrix, glm::vec4(0, 0, width, height));
+		glm::vec3 worldPos = glm::unProject(screenPos, ModelPart::viewMatrix * ModelPart::modelMatrix, ModelPart::projectionMatrix, glm::vec4(0, 0, width, height));
 		parts.back()->AddPoint(worldPos.x, worldPos.y, worldPos.z);
-		Release();
+		ReleaseGL();
 	}
+	previousMousePosition.x = x;
+	previousMousePosition.y = y;
 }
 
 void DrawPanel::MouseUp(int x, int y, int button)
 {
-	if (button == 0) {
+	if (button == 0 && parts.size() > 0) {
+		BindGL();
 		parts.back()->CreateMesh();
+		parts.back()->UpdateMeshBuffer();
+		ReleaseGL();
 	}
 }
 
@@ -128,12 +131,12 @@ void DrawPanel::MouseMove(int x, int y)
 {
 	if (isLMBDown) {
 		glm::vec3 screenPos(x, height -y, 0);
-		Bind();
+		BindGL();
 		glReadBuffer(GL_FRONT);
 		glReadPixels(screenPos.x, screenPos.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &screenPos.z);
 		screenPos.z = 0;
-		Release();
-		glm::vec3 worldPos = glm::unProject(screenPos, modelMatrix, projectionMatrix, glm::vec4(0, 0, width, height));
+		ReleaseGL();
+		glm::vec3 worldPos = glm::unProject(screenPos, ModelPart::viewMatrix * ModelPart::modelMatrix, ModelPart::projectionMatrix, glm::vec4(0, 0, width, height));
 		parts.back()->AddPoint(worldPos.x, worldPos.y, worldPos.z);
 		//AddPoint(worldPos.x, worldPos.y, worldPos.z);
 	}
@@ -143,8 +146,8 @@ void DrawPanel::MouseMove(int x, int y)
 		//glm::mat4 view = glm::translate(glm::mat4(1.0f), transform);
 		rotation.x += glm::radians((float)(y - previousMousePosition.y));
 		rotation.y += glm::radians((float)(x - previousMousePosition.x));
-		modelMatrix = glm::rotate(glm::mat4(1.0f), rotation.x, glm::vec3(1, 0, 0));
-		modelMatrix = glm::rotate(modelMatrix, rotation.y, glm::vec3(0, 1, 0));
+		ModelPart::modelMatrix = glm::rotate(glm::mat4(1.0f), rotation.x, glm::vec3(1, 0, 0));
+		ModelPart::modelMatrix = glm::rotate(ModelPart::modelMatrix, rotation.y, glm::vec3(0, 1, 0));
 	}
 	previousMousePosition.x = x;
 	previousMousePosition.y = y;
@@ -152,7 +155,31 @@ void DrawPanel::MouseMove(int x, int y)
 
 void DrawPanel::MouseWheel(int x, int y, int delta)
 {
-
+	if (isRMBDown) {
+		if (delta < 0) {
+			transform.z -= 0.5;
+		}
+		else {
+			transform.z += 0.5;
+		}
+	}
+	else if (isLMBDown) {
+		if (delta < 0) {
+			transform.z -= 50;
+		}
+		else {
+			transform.z += 50;
+		}
+	}
+	else {
+		if (delta < 0) {
+			transform.z -= 5;
+		}
+		else {
+			transform.z += 5;
+		}
+	}
+	ModelPart::viewMatrix = glm::translate(glm::mat4(1.0f), transform);
 }
 
 void DrawPanel::RemovePart(int id)

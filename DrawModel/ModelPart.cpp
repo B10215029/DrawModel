@@ -1,6 +1,8 @@
 #include "ModelPart.h"
 #include "ShaderUtility.h"
-#include <glm\gtc\type_ptr.hpp>
+#include "Triangulation.h"
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 struct ModelPart::DrawTextureProgram ModelPart::drawTexture = {};
 struct ModelPart::DrawColorProgram ModelPart::drawColor = {};
@@ -10,9 +12,9 @@ glm::vec4 ModelPart::strokeColor(0, 0, 1, 1);
 float ModelPart::strokeSize(50);
 float ModelPart::pointInterval(0.05f);
 GLuint ModelPart::strokeTextureHandle;
-//glm::mat4 ModelPart::modelMatrix;
-//glm::mat4 ModelPart::viewMatrix;
-//glm::mat4 ModelPart::projectionMatrix;
+glm::mat4 ModelPart::modelMatrix;
+glm::mat4 ModelPart::viewMatrix;
+glm::mat4 ModelPart::projectionMatrix;
 
 void ModelPart::InitProgram()
 {
@@ -25,11 +27,14 @@ void ModelPart::InitProgram()
 	drawStroke.colorLocation = glGetUniformLocation(drawStroke.program, "color");
 	drawStroke.colorTextureLocation = glGetUniformLocation(drawStroke.program, "colorTexture");
 	drawStroke.strokeTextureLocation = glGetUniformLocation(drawStroke.program, "strokeTexture");
-	drawSolid.program = loadProgram("./shader/DrawSolid.vert", "./shader/DrawSolid.frag");
+	drawSolid.program = loadProgram("./shader/DrawSolidMesh.vert", "./shader/DrawSolidMesh.frag");
 	drawSolid.modelMatrixLocation = glGetUniformLocation(drawSolid.program, "model_matrix");
 	drawSolid.viewMatrixLocation = glGetUniformLocation(drawSolid.program, "view_matrix");
 	drawSolid.projectionMatrixLocation = glGetUniformLocation(drawSolid.program, "projection_matrix");
 	strokeTextureHandle = loadTextureFromFilePNG("./stroke/stroke1.png");
+	//modelMatrix = glm::mat4(1.0f);
+	//viewMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, -1.5));
+	//projectionMatrix = glm::perspective(glm::radians(45.0f), (float)800 / (float)800, 0.1f, 10000.f);;
 }
 
 void ModelPart::SetStrokeTextureFromFile(const char* filePath)
@@ -39,6 +44,8 @@ void ModelPart::SetStrokeTextureFromFile(const char* filePath)
 
 ModelPart::ModelPart()
 {
+	mesh = NULL;
+	state = ModelState::STATE_NONE;
 }
 
 ModelPart::~ModelPart()
@@ -47,9 +54,15 @@ ModelPart::~ModelPart()
 
 void ModelPart::Render()
 {
-	//RenderStroke();
-	RenderLine();
-	RenderPoint();
+	if (state == ModelState::STATE_MODEL) {
+		RenderModel();
+		RenderLine();
+	}
+	else {
+		//RenderStroke();
+		RenderLine();
+		RenderPoint();
+	}
 }
 
 void ModelPart::RenderStroke()
@@ -88,13 +101,20 @@ void ModelPart::RenderLine()
 	glLineWidth(3);
 	glBindVertexArray(0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClear(GL_DEPTH_BUFFER_BIT);
-	glUseProgram(drawColor.program);
-	glUniform4fv(drawColor.colorLocation, 1, glm::value_ptr(glm::vec4(1, 0, 0, 1)));
+	//glClear(GL_DEPTH_BUFFER_BIT);
+	//glUseProgram(drawColor.program);
+	//glUniform4fv(drawColor.colorLocation, 1, glm::value_ptr(glm::vec4(1, 0, 0, 1)));
+	//glEnableVertexAttribArray(0);
+	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, &points[0]);
+	//glDrawArrays(GL_LINE_STRIP, 0, points.size());
+
+	glUseProgram(drawSolid.program);
+	glUniformMatrix4fv(drawSolid.modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+	glUniformMatrix4fv(drawSolid.viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+	glUniformMatrix4fv(drawSolid.projectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, &points[0]);
-	glDrawArrays(GL_LINE_LOOP, 0, points.size());
-
+	glDrawArrays(GL_LINE_STRIP, 0, points.size());
 }
 
 void ModelPart::RenderPoint()
@@ -112,7 +132,49 @@ void ModelPart::RenderPoint()
 
 void ModelPart::RenderModel()
 {
-
+	glBindVertexArray(0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	if (!mesh) {
+		return;
+	}
+	glBindVertexArray(vao);
+	glUseProgram(drawSolid.program);
+	//glm::mat4 model = glm::rotate(glm::mat4(1.0f), rotation.x, glm::vec3(1, 0, 0));
+	//model = glm::rotate(model, rotation.y, glm::vec3(0, 1, 0));
+	//glm::mat4 view = glm::translate(glm::mat4(1.0f), transform);
+	//glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 10000.f);;
+	glUniformMatrix4fv(drawSolid.modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+	glUniformMatrix4fv(drawSolid.viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+	glUniformMatrix4fv(drawSolid.projectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+	glBindVertexArray(vao);
+	//if (drawFace) {
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		//glUniform4fv(drawSolid.colorLocation, 1, glm::value_ptr(faceColor));
+		//glUniform1i(isLightingLocation, isLighting);
+		//glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
+		//glUniform1i(isLightingLocation, 0);
+	//}
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	//if (drawLine) {
+	//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//	glUniform4fv(colorLocation, 1, glm::value_ptr(lineColor));
+	//	glEnable(GL_POLYGON_OFFSET_LINE);
+	//	glPolygonOffset(-0.5, -0.5);
+	//	glLineWidth(lineWidth);
+	//	glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
+	//}
+	//if (drawPoint) {
+	//	glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+	//	glUniform4fv(colorLocation, 1, glm::value_ptr(pointColor));
+	//	glEnable(GL_POLYGON_OFFSET_POINT);
+	//	glPolygonOffset(-0.6, -0.6);
+	//	glPointSize(pointSize);
+	//	glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
+	//}
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void ModelPart::CreateFrameBuffer(int width, int height)
@@ -136,6 +198,11 @@ void ModelPart::CreateFrameBuffer(int width, int height)
 void ModelPart::CreateMesh()
 {
 	printf("CreateMesh\n");
+	//mesh = MyMesh::CreateFace(points);
+	mesh = Triangulation::CreateFace(&points[0], points.size());
+	mesh->Extrude(0, 0);
+	mesh->Smooth();
+	state = ModelState::STATE_MODEL;
 }
 
 void ModelPart::AddPoint(float x, float y, float z)
@@ -145,9 +212,11 @@ void ModelPart::AddPoint(float x, float y, float z)
 
 void ModelPart::AddPoint(glm::vec3 point)
 {
+	
 	if (points.empty()) {
 		pointQueue.push(point);
 		points.push_back(point);
+		printf("add point%d: %f, %f, %f\n", points.size(), point.x, point.y, point.z);
 	}
 	else {
 		glm::vec3 vector = point - points.back();
@@ -158,6 +227,57 @@ void ModelPart::AddPoint(glm::vec3 point)
 		}
 		if (lineLength > pointInterval) {
 			points.push_back(point);
+			printf("add point%d: %f, %f, %f\n", points.size(), point.x, point.y, point.z);
 		}
 	}
+}
+
+void ModelPart::UpdateMeshBuffer()
+{
+	if (!mesh) {
+		return;
+	}
+	//if (mesh) {
+	//	glDeleteVertexArrays(1, &vao);
+	//	glDeleteBuffers(1, &vbo);
+	//	glDeleteBuffers(1, &ebo);
+	//}
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	maxPointDist = 0;
+	vertexCount = mesh->n_vertices();
+	GLdouble *vertexData = new GLdouble[vertexCount * 6];
+	for (MyMesh::VertexIter v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it) {
+		memcpy(vertexData + (v_it->idx() * 6), mesh->point(v_it.handle()).data(), sizeof(GLdouble) * 3);
+		memcpy(vertexData + (v_it->idx() * 6 + 3), mesh->normal(v_it.handle()).data(), sizeof(GLdouble) * 3);
+		for (int i = 0; i < 3; i++) {
+			if (abs(mesh->point(v_it.handle())[i]) > maxPointDist) {
+				maxPointDist = abs(mesh->point(v_it.handle())[i]);
+			}
+		}
+	}
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, vertexCount * sizeof(GLdouble) * 6, vertexData, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, sizeof(GLdouble) * 6, 0);
+	glVertexAttribPointer(1, 3, GL_DOUBLE, GL_FALSE, sizeof(GLdouble) * 6, (GLvoid*)(sizeof(GLdouble) * 3));
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	delete[] vertexData;
+
+	faceCount = mesh->n_faces();
+	GLuint *vertexIndices = new GLuint[faceCount * 3];
+	for (MyMesh::FaceIter f_it = mesh->faces_begin(); f_it != mesh->faces_end(); ++f_it) {
+		int i = 0;
+		for (MyMesh::FaceVertexIter fv_it = mesh->fv_iter(f_it.handle()); fv_it.is_valid(); ++fv_it, ++i) {
+			vertexIndices[f_it->idx() * 3 + i] = fv_it->idx();
+		}
+	}
+	glGenBuffers(1, &ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, faceCount * sizeof(GLuint) * 3, vertexIndices, GL_STATIC_DRAW);
+	delete[] vertexIndices;
+
+	glBindVertexArray(0);
 }

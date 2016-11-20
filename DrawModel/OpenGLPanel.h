@@ -7,8 +7,8 @@ public:
 	OpenGLPanel();
 	~OpenGLPanel();
 	void SetPanel(HWND panelHandle);
-	void Bind();
-	void Release();
+	void BindGL();
+	void ReleaseGL();
 
 	virtual void Initialize() = 0;
 	virtual void Reshape(int width, int height) = 0;

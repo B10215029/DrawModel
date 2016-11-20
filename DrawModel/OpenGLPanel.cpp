@@ -68,12 +68,12 @@ void OpenGLPanel::SetPanel(HWND panelHandle)
 	wglMakeCurrent(NULL, NULL);
 }
 
-void OpenGLPanel::Bind()
+void OpenGLPanel::BindGL()
 {
 	wglMakeCurrent(hDC, hGLRC);
 }
 
-void OpenGLPanel::Release()
+void OpenGLPanel::ReleaseGL()
 {
 	wglMakeCurrent(NULL, NULL);
 }
