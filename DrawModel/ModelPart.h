@@ -57,6 +57,9 @@ private:
 		GLuint colorLocation;
 		GLuint colorTextureLocation;
 		GLuint strokeTextureLocation;
+		GLuint modelMatrixLocation;
+		GLuint viewMatrixLocation;
+		GLuint projectionMatrixLocation;
 	} drawStroke;
 	static struct DrawSolidProgram {
 		GLuint program;

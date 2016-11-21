@@ -199,7 +199,30 @@ double MyMesh::one_ring_area(VertexHandle vh)
 
 void MyMesh::Extrude(float thickness, int divisions)
 {
-
+	int vertexCount = n_vertices();
+	int faceCount = n_faces();
+	Point extrudeDirection = -normal(vertex_handle(0));
+	extrudeDirection * thickness;
+	for (int i = 0; i < vertexCount; i++) {
+		add_vertex(point(vertex_handle(i)) + extrudeDirection * thickness);
+	}
+	//for (VertexIter v_it = vertices_begin(); v_it != vertices_end(); ++v_it) {
+	//	add_vertex(point(v_it) + extrudeDirection * thickness);
+	//}
+	MyMesh::VertexHandle vh[3];
+	MyMesh::VertexHandle vh2[3];
+	FaceIter f_it = faces_begin();
+	for (int i = 0; i < faceCount; ++i) {
+		FaceVertexIter fv_it = fv_begin(f_it);
+		vh[0] = vertex_handle(fv_it.handle().idx() + vertexCount);
+		++fv_it;;
+		vh[2] = vertex_handle(fv_it.handle().idx() + vertexCount);
+		++fv_it;;
+		vh[1] = vertex_handle(fv_it.handle().idx() + vertexCount);
+		add_face(vh, 3);
+		++f_it;
+	}
+	update_normals();
 }
 
 void MyMesh::Smooth()

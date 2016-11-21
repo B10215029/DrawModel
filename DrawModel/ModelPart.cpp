@@ -10,7 +10,7 @@ struct ModelPart::DrawStrokeProgram ModelPart::drawStroke = {};
 struct ModelPart::DrawSolidProgram ModelPart::drawSolid = {};
 glm::vec4 ModelPart::strokeColor(0, 0, 1, 1);
 float ModelPart::strokeSize(50);
-float ModelPart::pointInterval(0.05f);
+float ModelPart::pointInterval(0.005f);
 GLuint ModelPart::strokeTextureHandle;
 glm::mat4 ModelPart::modelMatrix;
 glm::mat4 ModelPart::viewMatrix;
@@ -27,6 +27,9 @@ void ModelPart::InitProgram()
 	drawStroke.colorLocation = glGetUniformLocation(drawStroke.program, "color");
 	drawStroke.colorTextureLocation = glGetUniformLocation(drawStroke.program, "colorTexture");
 	drawStroke.strokeTextureLocation = glGetUniformLocation(drawStroke.program, "strokeTexture");
+	drawStroke.modelMatrixLocation = glGetUniformLocation(drawStroke.program, "model_matrix");
+	drawStroke.viewMatrixLocation = glGetUniformLocation(drawStroke.program, "view_matrix");
+	drawStroke.projectionMatrixLocation = glGetUniformLocation(drawStroke.program, "projection_matrix");
 	drawSolid.program = loadProgram("./shader/DrawSolidMesh.vert", "./shader/DrawSolidMesh.frag");
 	drawSolid.modelMatrixLocation = glGetUniformLocation(drawSolid.program, "model_matrix");
 	drawSolid.viewMatrixLocation = glGetUniformLocation(drawSolid.program, "view_matrix");
@@ -56,12 +59,12 @@ void ModelPart::Render()
 {
 	if (state == ModelState::STATE_MODEL) {
 		RenderModel();
-		RenderLine();
+		//RenderLine();
 	}
 	else {
-		//RenderStroke();
-		RenderLine();
-		RenderPoint();
+		RenderStroke();
+		//RenderLine();
+		//RenderPoint();
 	}
 }
 
@@ -74,6 +77,9 @@ void ModelPart::RenderStroke()
 		glUseProgram(drawStroke.program);
 		glUniform4fv(drawStroke.colorLocation, 1, glm::value_ptr(strokeColor));
 		glUniform1f(drawStroke.strokeSizeLocation, strokeSize);
+		glUniformMatrix4fv(drawStroke.modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+		glUniformMatrix4fv(drawStroke.viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+		glUniformMatrix4fv(drawStroke.projectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, strokeTextureHandle);
 		glUniform1i(drawStroke.strokeTextureLocation, 0);
@@ -147,32 +153,10 @@ void ModelPart::RenderModel()
 	glUniformMatrix4fv(drawSolid.viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
 	glUniformMatrix4fv(drawSolid.projectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 	glBindVertexArray(vao);
-	//if (drawFace) {
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		//glUniform4fv(drawSolid.colorLocation, 1, glm::value_ptr(faceColor));
-		//glUniform1i(isLightingLocation, isLighting);
-		//glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
-		//glUniform1i(isLightingLocation, 0);
-	//}
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	//if (drawLine) {
-	//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	//	glUniform4fv(colorLocation, 1, glm::value_ptr(lineColor));
-	//	glEnable(GL_POLYGON_OFFSET_LINE);
-	//	glPolygonOffset(-0.5, -0.5);
-	//	glLineWidth(lineWidth);
-	//	glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
-	//}
-	//if (drawPoint) {
-	//	glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-	//	glUniform4fv(colorLocation, 1, glm::value_ptr(pointColor));
-	//	glEnable(GL_POLYGON_OFFSET_POINT);
-	//	glPolygonOffset(-0.6, -0.6);
-	//	glPointSize(pointSize);
-	//	glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
-	//}
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -200,7 +184,7 @@ void ModelPart::CreateMesh()
 	printf("CreateMesh\n");
 	//mesh = MyMesh::CreateFace(points);
 	mesh = Triangulation::CreateFace(&points[0], points.size());
-	mesh->Extrude(0, 0);
+	mesh->Extrude(1, 0);
 	mesh->Smooth();
 	state = ModelState::STATE_MODEL;
 }
@@ -227,7 +211,7 @@ void ModelPart::AddPoint(glm::vec3 point)
 		}
 		if (lineLength > pointInterval) {
 			points.push_back(point);
-			printf("add point%d: %f, %f, %f\n", points.size(), point.x, point.y, point.z);
+			//printf("add point%d: %f, %f, %f\n", points.size(), point.x, point.y, point.z);
 		}
 	}
 }

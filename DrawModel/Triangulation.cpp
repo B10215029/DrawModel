@@ -53,11 +53,22 @@ MyMesh* Triangulation::CreateFace(void* contourPoints, int pointSize, int d)
 	printf("zx:%f, zy:%f\n", zx, zy);
 	MyMesh* mesh = new MyMesh();
 	MyMesh::VertexHandle vh[3];
-	//double thick = 0.5;
+	double thick = 0.3;
+	std::vector<MyMesh::VertexHandle> vertsOM;
+	std::vector<CDT::Vertex_handle> vertsCGAL;
+	for (CDT::Finite_vertices_iterator vc = m_Triangulation.finite_vertices_begin(); vc != m_Triangulation.finite_vertices_end(); ++vc) {
+		vertsOM.push_back(mesh->add_vertex(MyMesh::Point(vc->point()[0], vc->point()[1], (vc->point()[0] - cp[0]) * zx + (vc->point()[1] - cp[1]) * zy + cp[2])));
+		vertsCGAL.push_back(vc->handle());
+		//printf("vh: %d\n", vc->handle());
+	}
+
 	for (CDT::Finite_faces_iterator fc = m_Triangulation.finite_faces_begin(); fc != m_Triangulation.finite_faces_end(); ++fc) {
-		vh[0] = mesh->add_vertex(MyMesh::Point(fc->vertex(0)->point()[0], fc->vertex(0)->point()[1], (fc->vertex(0)->point()[0] - cp[0]) * zx + (fc->vertex(0)->point()[1] - cp[1]) * zy + cp[2]));
-		vh[1] = mesh->add_vertex(MyMesh::Point(fc->vertex(1)->point()[0], fc->vertex(1)->point()[1], (fc->vertex(1)->point()[0] - cp[0]) * zx + (fc->vertex(1)->point()[1] - cp[1]) * zy + cp[2]));
-		vh[2] = mesh->add_vertex(MyMesh::Point(fc->vertex(2)->point()[0], fc->vertex(2)->point()[1], (fc->vertex(2)->point()[0] - cp[0]) * zx + (fc->vertex(2)->point()[1] - cp[1]) * zy + cp[2]));
+		vh[0] = vertsOM[std::find(vertsCGAL.begin(), vertsCGAL.end(), fc->vertex(0)->handle()) - vertsCGAL.begin()];
+		vh[1] = vertsOM[std::find(vertsCGAL.begin(), vertsCGAL.end(), fc->vertex(1)->handle()) - vertsCGAL.begin()];
+		vh[2] = vertsOM[std::find(vertsCGAL.begin(), vertsCGAL.end(), fc->vertex(2)->handle()) - vertsCGAL.begin()];
+		//vh[0] = mesh->add_vertex(MyMesh::Point(fc->vertex(0)->point()[0], fc->vertex(0)->point()[1], (fc->vertex(0)->point()[0] - cp[0]) * zx + (fc->vertex(0)->point()[1] - cp[1]) * zy + cp[2]));
+		//vh[1] = mesh->add_vertex(MyMesh::Point(fc->vertex(1)->point()[0], fc->vertex(1)->point()[1], (fc->vertex(1)->point()[0] - cp[0]) * zx + (fc->vertex(1)->point()[1] - cp[1]) * zy + cp[2]));
+		//vh[2] = mesh->add_vertex(MyMesh::Point(fc->vertex(2)->point()[0], fc->vertex(2)->point()[1], (fc->vertex(2)->point()[0] - cp[0]) * zx + (fc->vertex(2)->point()[1] - cp[1]) * zy + cp[2]));
 		mesh->add_face(vh, 3);
 		//vh[0] = mesh->add_vertex(MyMesh::Point(fc->vertex(0)->point()[0], fc->vertex(0)->point()[1], (fc->vertex(0)->point()[0] - cp[0]) * zx + (fc->vertex(0)->point()[1] - cp[1]) * zy + cp[2] - thick));
 		//vh[1] = mesh->add_vertex(MyMesh::Point(fc->vertex(2)->point()[0], fc->vertex(2)->point()[1], (fc->vertex(2)->point()[0] - cp[0]) * zx + (fc->vertex(2)->point()[1] - cp[1]) * zy + cp[2] - thick));
@@ -72,4 +83,9 @@ MyMesh* Triangulation::CreateFace(void* contourPoints, int pointSize, int d)
 	printf("CreateFace OK\n");
 	printf("v:%d, f:%d", mesh->n_vertices(), mesh->n_faces());
 	return mesh;
+}
+
+int PointIntersectContour()
+{
+	return 0;
 }

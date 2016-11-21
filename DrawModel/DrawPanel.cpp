@@ -6,6 +6,10 @@
 
 DrawPanel::DrawPanel()
 {
+	zoom = 0;
+	zNear = 0.1;
+	zFar = 100;
+	transform = glm::vec3(0, 0, -pow(2, zoom));
 	points.clear();
 	ModelPart::modelMatrix = glm::mat4(1.0f);
 	ModelPart::viewMatrix = glm::translate(glm::mat4(1.0f), transform);
@@ -19,7 +23,8 @@ DrawPanel::~DrawPanel()
 
 void DrawPanel::Initialize()
 {
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
+	//glCullFace(GL_FRONT_AND_BACK);
 	glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_POINT_SMOOTH);
 	glEnable(GL_POINT_SPRITE);
@@ -56,7 +61,7 @@ void DrawPanel::Initialize()
 void DrawPanel::Reshape(int width, int height)
 {
 	glViewport(0, 0, width, height);
-	ModelPart::projectionMatrix = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 1000.f);
+	ModelPart::projectionMatrix = glm::perspective(glm::radians(45.0f), (float)width / (float)height, zNear, zFar);
 }
 
 void DrawPanel::Display()
@@ -103,15 +108,25 @@ void DrawPanel::MouseDown(int x, int y, int button)
 {
 	if (button == 0) {
 		parts.push_back(new ModelPart());
+		glm::vec3 screenPos(((float)x) / width * 2 - 1, ((float)y) / height * -2 + 1, 0);
 		BindGL();
 		parts.back()->CreateFrameBuffer(width, height);
-		glm::vec3 screenPos(x, height - y, 0);
-		glReadBuffer(GL_FRONT);
-		glReadPixels(screenPos.x, screenPos.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &screenPos.z);
-		screenPos.z = 0;
-		glm::vec3 worldPos = glm::unProject(screenPos, ModelPart::viewMatrix * ModelPart::modelMatrix, ModelPart::projectionMatrix, glm::vec4(0, 0, width, height));
-		parts.back()->AddPoint(worldPos.x, worldPos.y, worldPos.z);
+		//glReadBuffer(GL_FRONT);
+		//glReadPixels(screenPos.x, screenPos.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &screenPos.z);
 		ReleaseGL();
+		glm::vec4 p = ModelPart::projectionMatrix * ModelPart::viewMatrix * ModelPart::modelMatrix * glm::vec4(0, 0, 0, 1);
+		printf("P: %f, %f, %f, %f\n", p.x, p.y, p.z, p.w);
+		screenPos.z = (p.z / p.w + 1) / 2;
+		printf("screenPos.z: %f, %f, %f\n", screenPos.x, screenPos.y, screenPos.z);
+
+		//screenPos.z = (zFar + transform.z) / (zFar - zNear);
+		glm::vec3 worldPos = glm::unProject(screenPos, ModelPart::viewMatrix * ModelPart::modelMatrix, ModelPart::projectionMatrix, glm::vec4(-1, -1, 2, 2));
+		parts.back()->AddPoint(worldPos);
+		
+		//printf("screenPos.z: %f, %f, %f\n", screenPos.x, screenPos.y, screenPos.z);
+		printf("worldPos.z: %f, %f, %f\n", worldPos.x, worldPos.y, worldPos.z);
+
+		//printf("transform.z: %f\n", transform.z);
 	}
 	previousMousePosition.x = x;
 	previousMousePosition.y = y;
@@ -131,13 +146,15 @@ void DrawPanel::MouseMove(int x, int y)
 {
 	if (isLMBDown) {
 		glm::vec3 screenPos(x, height -y, 0);
-		BindGL();
-		glReadBuffer(GL_FRONT);
-		glReadPixels(screenPos.x, screenPos.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &screenPos.z);
-		screenPos.z = 0;
-		ReleaseGL();
+		//BindGL();
+		//glReadBuffer(GL_FRONT);
+		//glReadPixels(screenPos.x, screenPos.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &screenPos.z);
+		//ReleaseGL();
+		//screenPos.z = 1.0 - (zFar + transform.z) / (zFar - zNear);
+		glm::vec4 p = ModelPart::projectionMatrix * ModelPart::viewMatrix * ModelPart::modelMatrix * glm::vec4(0, 0, 0, 1);
+		screenPos.z = (p.z / p.w + 1) / 2;
 		glm::vec3 worldPos = glm::unProject(screenPos, ModelPart::viewMatrix * ModelPart::modelMatrix, ModelPart::projectionMatrix, glm::vec4(0, 0, width, height));
-		parts.back()->AddPoint(worldPos.x, worldPos.y, worldPos.z);
+		parts.back()->AddPoint(worldPos);
 		//AddPoint(worldPos.x, worldPos.y, worldPos.z);
 	}
 	if (isRMBDown) {
@@ -157,28 +174,29 @@ void DrawPanel::MouseWheel(int x, int y, int delta)
 {
 	if (isRMBDown) {
 		if (delta < 0) {
-			transform.z -= 0.5;
+			zoom += 0.1;
 		}
 		else {
-			transform.z += 0.5;
+			zoom -= 0.1;
 		}
 	}
-	else if (isLMBDown) {
+	else if (isMMBDown) {
 		if (delta < 0) {
-			transform.z -= 50;
+			zoom += 10;
 		}
 		else {
-			transform.z += 50;
+			zoom -= 10;
 		}
 	}
 	else {
 		if (delta < 0) {
-			transform.z -= 5;
+			zoom += 1;
 		}
 		else {
-			transform.z += 5;
+			zoom -= 1;
 		}
 	}
+	transform.z = -pow(2, zoom);
 	ModelPart::viewMatrix = glm::translate(glm::mat4(1.0f), transform);
 }
 
