@@ -27,6 +27,11 @@ public:
 	static glm::mat4 modelMatrix;
 	static glm::mat4 viewMatrix;
 	static glm::mat4 projectionMatrix;
+	static float extrudeThickness;
+	static float extrudeDivisions;
+	static float extrudeOffset;
+	static float swellPower;
+	static float swellSize;
 
 	ModelPart();
 	~ModelPart();
@@ -40,7 +45,8 @@ public:
 	void CreateFrameBuffer(int width, int height);
 	void CreateMesh();
 	void UpdateMeshBuffer();
-
+	void ExtractionMesh(float s);
+	void SmoothMesh(int step);
 
 private:
 	static struct DrawTextureProgram {

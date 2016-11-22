@@ -5,6 +5,7 @@
 #include <ctime>
 #include <deque>
 #include <Eigen/Sparse>
+#include <OpenMesh/Tools/Smoother/JacobiLaplaceSmootherT.hh>
 
 OpenMesh::EPropHandleT<double> MyMesh::edgeWeight;
 OpenMesh::VPropHandleT<double> MyMesh::oneRingArea;
@@ -44,7 +45,7 @@ void MyMesh::Extraction(float s)
 	static Eigen::MatrixXd b;
 	static Eigen::MatrixXd x;
 	static Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> linearSolver;
-	double wl;
+	static double wl;
 	clock_t c = clock();
 	std::cout << "start:" << c << std::endl;
 	int vertexCount = n_vertices();
@@ -203,16 +204,16 @@ double MyMesh::one_ring_area(VertexHandle vh)
 	return area;
 }
 
-void MyMesh::Extrude(float thickness, int divisions)
+void MyMesh::Extrude(float thickness, int divisions, float offsetZ, float swellSize, float swellPower)
 {
 	int vertexCount = n_vertices();
 	int faceCount = n_faces();
 	int boundaryVertexCount = 0;
 	// clone vertex
 	Point extrudeDirection = -normal(vertex_handle(0));
-	Point invExtrudeDirection = normal(vertex_handle(0)) / 2;
+	Point offset = normal(vertex_handle(0)) * (thickness / 2 + offsetZ);
 	for (int i = 0; i < vertexCount; i++) {
-		point(vertex_handle(i)) += invExtrudeDirection * thickness;
+		point(vertex_handle(i)) += offset;
 		add_vertex(point(vertex_handle(i)) + extrudeDirection * thickness);
 	}
 	// find boundary vertex and add vertex
@@ -266,7 +267,10 @@ void MyMesh::Extrude(float thickness, int divisions)
 	OpenMesh::IO::write_mesh(*this, "test2.obj");
 }
 
-void MyMesh::Smooth()
+void MyMesh::Smooth(int steps)
 {
-
+	OpenMesh::Smoother::JacobiLaplaceSmootherT<MyMesh> smoother(*this);
+	smoother.initialize(OpenMesh::Smoother::SmootherT<MyMesh>::Component::Tangential_and_Normal, OpenMesh::Smoother::SmootherT<MyMesh>::Continuity::C0);
+	smoother.smooth(steps);// Execute 3 smooth steps
+	
 }

@@ -171,6 +171,11 @@ void DrawPanel::MouseMove(int x, int y)
 		ModelPart::modelMatrix = glm::rotate(glm::mat4(1.0f), rotation.x, glm::vec3(1, 0, 0));
 		ModelPart::modelMatrix = glm::rotate(ModelPart::modelMatrix, rotation.y, glm::vec3(0, 1, 0));
 	}
+	if (isMMBDown) {
+		transform.x += (x - previousMousePosition.x) * glm::abs(transform.z) / 500;
+		transform.y -= (y - previousMousePosition.y) * glm::abs(transform.z) / 500;
+		ModelPart::viewMatrix = glm::translate(glm::mat4(1.0f), transform);
+	}
 	previousMousePosition.x = x;
 	previousMousePosition.y = y;
 }
@@ -210,5 +215,35 @@ void DrawPanel::RemovePart(int id)
 	if (id >= 0 && id < parts.size()) {
 		delete parts[id];
 		parts.erase(parts.begin() + id);
+	}
+}
+
+void DrawPanel::ReCreatePart(int id)
+{
+	if (id >= 0 && id < parts.size()) {
+		BindGL();
+		parts[id]->CreateMesh();
+		parts[id]->UpdateMeshBuffer();
+		ReleaseGL();
+	}
+}
+
+void DrawPanel::ExtractionPart(int id, float s)
+{
+	if (id >= 0 && id < parts.size()) {
+		BindGL();
+		parts[id]->ExtractionMesh(s);
+		parts[id]->UpdateMeshBuffer();
+		ReleaseGL();
+	}
+}
+
+void DrawPanel::SmoothPart(int id, int step)
+{
+	if (id >= 0 && id < parts.size()) {
+		BindGL();
+		parts[id]->SmoothMesh(step);
+		parts[id]->UpdateMeshBuffer();
+		ReleaseGL();
 	}
 }

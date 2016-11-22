@@ -19,6 +19,9 @@ public:
 	void MouseMove(int x, int y);
 	void MouseWheel(int x, int y, int delta);
 	void RemovePart(int id);
+	void ReCreatePart(int id);
+	void ExtractionPart(int id, float s);
+	void SmoothPart(int id, int step);
 
 	bool cleanStroke;
 

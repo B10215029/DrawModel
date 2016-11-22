@@ -15,6 +15,11 @@ GLuint ModelPart::strokeTextureHandle;
 glm::mat4 ModelPart::modelMatrix;
 glm::mat4 ModelPart::viewMatrix;
 glm::mat4 ModelPart::projectionMatrix;
+float ModelPart::extrudeThickness = 1;
+float ModelPart::extrudeDivisions = 3;
+float ModelPart::extrudeOffset = 0;
+float ModelPart::swellPower = 1;
+float ModelPart::swellSize = 0;
 
 void ModelPart::InitProgram()
 {
@@ -196,9 +201,22 @@ void ModelPart::CreateMesh()
 	printf("CreateMesh\n");
 	//mesh = MyMesh::CreateFace(points);
 	mesh = Triangulation::CreateFace(&points[0], points.size());
-	mesh->Extrude(1, 3);
-	mesh->Smooth();
+	mesh->Extrude(extrudeThickness, extrudeDivisions, extrudeOffset, swellSize, swellPower);
 	state = ModelState::STATE_MODEL;
+}
+
+void ModelPart::ExtractionMesh(float s)
+{
+	if (mesh) {
+		mesh->Extraction(s);
+	}
+}
+
+void ModelPart::SmoothMesh(int step)
+{
+	if (mesh) {
+		mesh->Smooth(step);
+	}
 }
 
 void ModelPart::AddPoint(float x, float y, float z)

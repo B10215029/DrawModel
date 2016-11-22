@@ -19,8 +19,8 @@ public:
 	~MyMesh();
 	void Extraction(float s = 2);
 	void LaplacianSmooth();
-	void Extrude(float thickness, int divisions);
-	void Smooth();
+	void Extrude(float thickness, int divisions, float offsetZ = 0.0f, float swellSize = 0.0f, float swellPower = 1.0f);
+	void Smooth(int steps = 3);
 
 private:
 	static OpenMesh::EPropHandleT<double> edgeWeight;
