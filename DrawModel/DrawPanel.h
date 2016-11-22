@@ -27,7 +27,7 @@ private:
 	//glm::mat4 modelMatrix;
 	//glm::mat4 viewMatrix;
 	//glm::mat4 projectionMatrix;
-	float zoom, zNear, zFar;
+	float zoom, zNear, zFar, zDraw;
 	glm::vec3 transform;
 	glm::vec3 rotation;
 	GLuint program;

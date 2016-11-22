@@ -66,6 +66,7 @@ private:
 		GLuint modelMatrixLocation;
 		GLuint viewMatrixLocation;
 		GLuint projectionMatrixLocation;
+		GLuint colorLocation;
 	} drawSolid;
 
 	GLuint vao, vbo, ebo;

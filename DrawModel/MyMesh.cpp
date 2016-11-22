@@ -3,6 +3,7 @@
 #undef max
 #include <iostream>
 #include <ctime>
+#include <deque>
 #include <Eigen/Sparse>
 
 OpenMesh::EPropHandleT<double> MyMesh::edgeWeight;
@@ -136,6 +137,11 @@ void MyMesh::Extraction(float s)
 	puts("Extraction");
 }
 
+void MyMesh::LaplacianSmooth()
+{
+
+}
+
 void MyMesh::UpdateEdgeWeight()
 {
 	for (EdgeIter e_it = edges_begin(); e_it != edges_end(); ++e_it) {
@@ -201,28 +207,63 @@ void MyMesh::Extrude(float thickness, int divisions)
 {
 	int vertexCount = n_vertices();
 	int faceCount = n_faces();
+	int boundaryVertexCount = 0;
+	// clone vertex
 	Point extrudeDirection = -normal(vertex_handle(0));
-	extrudeDirection * thickness;
+	Point invExtrudeDirection = normal(vertex_handle(0)) / 2;
 	for (int i = 0; i < vertexCount; i++) {
+		point(vertex_handle(i)) += invExtrudeDirection * thickness;
 		add_vertex(point(vertex_handle(i)) + extrudeDirection * thickness);
 	}
-	//for (VertexIter v_it = vertices_begin(); v_it != vertices_end(); ++v_it) {
-	//	add_vertex(point(v_it) + extrudeDirection * thickness);
-	//}
+	// find boundary vertex and add vertex
+	std::deque<VertexHandle> boundaryVertices;
+	boundaryVertices.clear();
+	for (HalfedgeIter he_it = halfedges_begin(); he_it != halfedges_end(); ++he_it) {
+		if (is_boundary(he_it)) {
+			HalfedgeHandle he = he_it.handle();
+			do {
+				boundaryVertices.push_back(from_vertex_handle(he));
+				he = next_halfedge_handle(he);
+			} while (he != he_it.handle());
+			boundaryVertexCount = boundaryVertices.size();
+			break;
+		}
+	}
+	for (int i = 1; i < divisions; i++) {
+		for (int j = 0; j < boundaryVertexCount; j++) {
+			boundaryVertices.push_back(add_vertex(point(boundaryVertices[j]) + extrudeDirection * (thickness / divisions * i)));
+		}
+	}
+	for (int i = 0; i < boundaryVertexCount; i++) {
+		boundaryVertices.push_back(vertex_handle(boundaryVertices[i].idx() + vertexCount));
+	}
 	MyMesh::VertexHandle vh[3];
-	MyMesh::VertexHandle vh2[3];
+	// add boundary face
+	for (int i = 0; i < boundaryVertexCount; i++) {
+		int ni = (i + 1) % boundaryVertexCount;
+		for (int j = 0; j < divisions; j++) {
+			MyMesh::VertexHandle p0 = boundaryVertices[boundaryVertexCount * j + i];
+			MyMesh::VertexHandle p1 = boundaryVertices[boundaryVertexCount * j + ni];
+			MyMesh::VertexHandle p2 = boundaryVertices[boundaryVertexCount * (j + 1) + i];
+			MyMesh::VertexHandle p3 = boundaryVertices[boundaryVertexCount * (j + 1) + ni];
+			add_face(p0, p1, p2);
+			add_face(p2, p1, p3);
+		}
+	}
+	// clone face
 	FaceIter f_it = faces_begin();
 	for (int i = 0; i < faceCount; ++i) {
 		FaceVertexIter fv_it = fv_begin(f_it);
 		vh[0] = vertex_handle(fv_it.handle().idx() + vertexCount);
-		++fv_it;;
+		++fv_it;
 		vh[2] = vertex_handle(fv_it.handle().idx() + vertexCount);
-		++fv_it;;
+		++fv_it;
 		vh[1] = vertex_handle(fv_it.handle().idx() + vertexCount);
 		add_face(vh, 3);
 		++f_it;
 	}
 	update_normals();
+	OpenMesh::IO::write_mesh(*this, "test2.obj");
 }
 
 void MyMesh::Smooth()

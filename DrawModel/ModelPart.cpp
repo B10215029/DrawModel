@@ -34,6 +34,7 @@ void ModelPart::InitProgram()
 	drawSolid.modelMatrixLocation = glGetUniformLocation(drawSolid.program, "model_matrix");
 	drawSolid.viewMatrixLocation = glGetUniformLocation(drawSolid.program, "view_matrix");
 	drawSolid.projectionMatrixLocation = glGetUniformLocation(drawSolid.program, "projection_matrix");
+	drawSolid.colorLocation = glGetUniformLocation(drawSolid.program, "color");
 	strokeTextureHandle = loadTextureFromFilePNG("./stroke/stroke1.png");
 	//modelMatrix = glm::mat4(1.0f);
 	//viewMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, -1.5));
@@ -118,6 +119,7 @@ void ModelPart::RenderLine()
 	glUniformMatrix4fv(drawSolid.modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
 	glUniformMatrix4fv(drawSolid.viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
 	glUniformMatrix4fv(drawSolid.projectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+	glUniform4fv(drawSolid.colorLocation, 1, glm::value_ptr(strokeColor));
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, &points[0]);
 	glDrawArrays(GL_LINE_STRIP, 0, points.size());
@@ -145,17 +147,27 @@ void ModelPart::RenderModel()
 	}
 	glBindVertexArray(vao);
 	glUseProgram(drawSolid.program);
-	//glm::mat4 model = glm::rotate(glm::mat4(1.0f), rotation.x, glm::vec3(1, 0, 0));
-	//model = glm::rotate(model, rotation.y, glm::vec3(0, 1, 0));
-	//glm::mat4 view = glm::translate(glm::mat4(1.0f), transform);
-	//glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 10000.f);;
 	glUniformMatrix4fv(drawSolid.modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
 	glUniformMatrix4fv(drawSolid.viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
 	glUniformMatrix4fv(drawSolid.projectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 	glBindVertexArray(vao);
+	glUniform4fv(drawSolid.colorLocation, 1, glm::value_ptr(glm::vec4(0.5, 0.5, 0.5, 1.0)));
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
+	glUniform4fv(drawSolid.colorLocation, 1, glm::value_ptr(glm::vec4(0.2, 0.2, 0.2, 1.0)));
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glEnable(GL_POLYGON_OFFSET_LINE);
+	glPolygonOffset(-0.5, -0.5);
+	glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
+	glDisable(GL_CULL_FACE);
+	glPointSize(5);
+	glUniform4fv(drawSolid.colorLocation, 1, glm::value_ptr(glm::vec4(0, 1, 0, 1.0)));
+	glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+	glEnable(GL_POLYGON_OFFSET_POINT);
+	glPolygonOffset(-0.6, -0.6);
+	glDrawArrays(GL_POINTS, 0, vertexCount);
+	//glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
+	glEnable(GL_CULL_FACE);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -184,7 +196,7 @@ void ModelPart::CreateMesh()
 	printf("CreateMesh\n");
 	//mesh = MyMesh::CreateFace(points);
 	mesh = Triangulation::CreateFace(&points[0], points.size());
-	mesh->Extrude(1, 0);
+	mesh->Extrude(1, 3);
 	mesh->Smooth();
 	state = ModelState::STATE_MODEL;
 }
@@ -200,7 +212,7 @@ void ModelPart::AddPoint(glm::vec3 point)
 	if (points.empty()) {
 		pointQueue.push(point);
 		points.push_back(point);
-		printf("add point%d: %f, %f, %f\n", points.size(), point.x, point.y, point.z);
+		//printf("add point%d: %f, %f, %f\n", points.size(), point.x, point.y, point.z);
 	}
 	else {
 		glm::vec3 vector = point - points.back();

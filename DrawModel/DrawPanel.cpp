@@ -23,8 +23,7 @@ DrawPanel::~DrawPanel()
 
 void DrawPanel::Initialize()
 {
-	//glEnable(GL_CULL_FACE);
-	//glCullFace(GL_FRONT_AND_BACK);
+	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_POINT_SMOOTH);
 	glEnable(GL_POINT_SPRITE);
@@ -108,23 +107,28 @@ void DrawPanel::MouseDown(int x, int y, int button)
 {
 	if (button == 0) {
 		parts.push_back(new ModelPart());
-		glm::vec3 screenPos(((float)x) / width * 2 - 1, ((float)y) / height * -2 + 1, 0);
+		glm::vec3 screenPos(x, height - y, 0);
 		BindGL();
 		parts.back()->CreateFrameBuffer(width, height);
-		//glReadBuffer(GL_FRONT);
-		//glReadPixels(screenPos.x, screenPos.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &screenPos.z);
+		glReadBuffer(GL_FRONT);
+		glReadPixels(screenPos.x, screenPos.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &zDraw);
+		printf("bzDraw %lf\n", zDraw);
+		if (zDraw == 1) {
+			glm::vec4 p = ModelPart::projectionMatrix * ModelPart::viewMatrix * ModelPart::modelMatrix * glm::vec4(0, 0, 0, 1);
+			zDraw = (p.z / p.w + 1) / 2;
+		}
+		printf("azDraw %lf\n", zDraw);
+		//printf("P: %f, %f, %f, %f\n", p.x, p.y, p.z, p.w);
+		//printf("screenPos.z: %f, %f, %f\n", screenPos.x, screenPos.y, screenPos.z);
 		ReleaseGL();
-		glm::vec4 p = ModelPart::projectionMatrix * ModelPart::viewMatrix * ModelPart::modelMatrix * glm::vec4(0, 0, 0, 1);
-		printf("P: %f, %f, %f, %f\n", p.x, p.y, p.z, p.w);
-		screenPos.z = (p.z / p.w + 1) / 2;
-		printf("screenPos.z: %f, %f, %f\n", screenPos.x, screenPos.y, screenPos.z);
+		screenPos.z = zDraw;
 
 		//screenPos.z = (zFar + transform.z) / (zFar - zNear);
-		glm::vec3 worldPos = glm::unProject(screenPos, ModelPart::viewMatrix * ModelPart::modelMatrix, ModelPart::projectionMatrix, glm::vec4(-1, -1, 2, 2));
+		glm::vec3 worldPos = glm::unProject(screenPos, ModelPart::viewMatrix * ModelPart::modelMatrix, ModelPart::projectionMatrix, glm::vec4(0, 0, width, height));
 		parts.back()->AddPoint(worldPos);
 		
 		//printf("screenPos.z: %f, %f, %f\n", screenPos.x, screenPos.y, screenPos.z);
-		printf("worldPos.z: %f, %f, %f\n", worldPos.x, worldPos.y, worldPos.z);
+		//printf("worldPos.z: %f, %f, %f\n", worldPos.x, worldPos.y, worldPos.z);
 
 		//printf("transform.z: %f\n", transform.z);
 	}
@@ -151,13 +155,14 @@ void DrawPanel::MouseMove(int x, int y)
 		//glReadPixels(screenPos.x, screenPos.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &screenPos.z);
 		//ReleaseGL();
 		//screenPos.z = 1.0 - (zFar + transform.z) / (zFar - zNear);
-		glm::vec4 p = ModelPart::projectionMatrix * ModelPart::viewMatrix * ModelPart::modelMatrix * glm::vec4(0, 0, 0, 1);
-		screenPos.z = (p.z / p.w + 1) / 2;
+		//glm::vec4 p = ModelPart::projectionMatrix * ModelPart::viewMatrix * ModelPart::modelMatrix * glm::vec4(0, 0, 0, 1);
+		//screenPos.z = (p.z / p.w + 1) / 2;
+		screenPos.z = zDraw;
 		glm::vec3 worldPos = glm::unProject(screenPos, ModelPart::viewMatrix * ModelPart::modelMatrix, ModelPart::projectionMatrix, glm::vec4(0, 0, width, height));
 		parts.back()->AddPoint(worldPos);
 		//AddPoint(worldPos.x, worldPos.y, worldPos.z);
 	}
-	if (isRMBDown) {
+	else if (isRMBDown) {
 		//glm::mat4 model = glm::rotate(glm::mat4(1.0f), rotation.x, glm::vec3(1, 0, 0));
 		//model = glm::rotate(model, rotation.y, glm::vec3(0, 1, 0));
 		//glm::mat4 view = glm::translate(glm::mat4(1.0f), transform);

@@ -18,6 +18,7 @@ public:
 	MyMesh();
 	~MyMesh();
 	void Extraction(float s = 2);
+	void LaplacianSmooth();
 	void Extrude(float thickness, int divisions);
 	void Smooth();
 
