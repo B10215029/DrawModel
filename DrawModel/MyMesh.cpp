@@ -263,6 +263,42 @@ void MyMesh::Extrude(float thickness, int divisions, float offsetZ, float swellS
 		add_face(vh, 3);
 		++f_it;
 	}
+	//size with power
+
+	for (int i = 0; i < vertexCount; i++)
+	{
+		double minDistance = -1;
+		double maxDistance = -1;
+		if (is_boundary(vertex_handle(i))) {
+
+		}
+		else {
+			for (int j = 0; j < boundaryVertexCount; j++)
+			{
+				point(vertex_handle(i));
+				//point(vertex_handle(i)) += extrudeDirection * 2;
+
+				double distance = sqrt(
+					pow(point(boundaryVertices[j]).data()[0] - point(vertex_handle(i)).data()[0], 2) +
+					pow(point(boundaryVertices[j]).data()[1] - point(vertex_handle(i)).data()[1], 2) +
+					pow(point(boundaryVertices[j]).data()[2] - point(vertex_handle(i)).data()[2], 2)
+				);
+				if (minDistance < 0 || minDistance >= distance) {
+					minDistance = distance;
+				}
+				if (maxDistance < 0 || maxDistance <= distance) {
+					maxDistance = distance;
+				}
+			}
+
+			double moveDistance = pow(minDistance/(maxDistance), swellPower) * swellSize;
+			point(vertex_handle(i)) -= extrudeDirection * moveDistance;
+			point(vertex_handle(i + vertexCount)) += extrudeDirection * moveDistance;
+		}
+		
+		
+	}
+
 	update_normals();
 	OpenMesh::IO::write_mesh(*this, "test2.obj");
 }
