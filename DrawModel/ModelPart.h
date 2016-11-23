@@ -19,6 +19,7 @@ class ModelPart
 public:
 	static void InitProgram();
 	static void SetStrokeTextureFromFile(const char* filePath);
+	static void SavePartsToOBJ(std::deque<ModelPart*> parts, const char* fileName);
 
 	static glm::vec4 strokeColor;
 	static float strokeSize;
@@ -32,6 +33,8 @@ public:
 	static float extrudeOffset;
 	static float swellPower;
 	static float swellSize;
+	static bool modelRenderPoint;
+	static bool modelRenderLine;
 
 	ModelPart();
 	~ModelPart();

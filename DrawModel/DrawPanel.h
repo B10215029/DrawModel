@@ -9,6 +9,20 @@
 class DrawPanel : public OpenGLPanel
 {
 public:
+
+	enum ViewDirection
+	{
+		FrontView,
+		BackView,
+		TopView,
+		BottomView,
+		RightView,
+		LeftView,
+		FTRView,
+		BBLView,
+		ResetView
+	};
+
 	DrawPanel();
 	~DrawPanel();
 	void Initialize();
@@ -22,8 +36,12 @@ public:
 	void ReCreatePart(int id);
 	void ExtractionPart(int id, float s);
 	void SmoothPart(int id, int step);
+	void SetView(ViewDirection viewDirection);
+	void ExportOBJ(const char* fileName);
 
 	bool cleanStroke;
+	glm::vec3 transform;
+	glm::vec3 rotation;
 
 private:
 	glm::ivec2 previousMousePosition;
@@ -31,8 +49,6 @@ private:
 	//glm::mat4 viewMatrix;
 	//glm::mat4 projectionMatrix;
 	float zoom, zNear, zFar, zDraw;
-	glm::vec3 transform;
-	glm::vec3 rotation;
 	GLuint program;
 	GLuint modelMatrixLocation;
 	GLuint viewMatrixLocation;

@@ -20,6 +20,8 @@ float ModelPart::extrudeDivisions = 3;
 float ModelPart::extrudeOffset = 0;
 float ModelPart::swellPower = 1;
 float ModelPart::swellSize = 0;
+bool ModelPart::modelRenderPoint = true;
+bool ModelPart::modelRenderLine = true;
 
 void ModelPart::InitProgram()
 {
@@ -49,6 +51,27 @@ void ModelPart::InitProgram()
 void ModelPart::SetStrokeTextureFromFile(const char* filePath)
 {
 	ModelPart::strokeTextureHandle = loadTextureFromFilePNG(filePath);
+}
+
+void ModelPart::SavePartsToOBJ(std::deque<ModelPart*> parts, const char* fileName)
+{
+	MyMesh mesh;
+	std::deque<MyMesh::VertexHandle> verts;
+	MyMesh::VertexHandle vh[3];
+	for (int i = 0; i < parts.size(); i++) {
+		verts.clear();
+		for (MyMesh::VertexIter v_it = parts[i]->mesh->vertices_begin(); v_it != parts[i]->mesh->vertices_end(); ++v_it) {
+			verts.push_back(mesh.add_vertex(parts[i]->mesh->point(v_it)));
+		}
+		for (MyMesh::FaceIter f_it = parts[i]->mesh->faces_begin(); f_it != parts[i]->mesh->faces_end(); ++f_it) {
+			MyMesh::FaceVertexIter fv_it = parts[i]->mesh->fv_begin(f_it);
+			for (int j = 0; fv_it != parts[i]->mesh->fv_end(f_it); j++, ++fv_it) {
+				vh[j] = verts[fv_it->idx()];
+			}
+			mesh.add_face(vh, 3);
+		}
+	}
+	OpenMesh::IO::write_mesh(mesh, fileName);
 }
 
 ModelPart::ModelPart()
@@ -157,23 +180,27 @@ void ModelPart::RenderModel()
 	glUniformMatrix4fv(drawSolid.projectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 	glBindVertexArray(vao);
 	glUniform4fv(drawSolid.colorLocation, 1, glm::value_ptr(glm::vec4(0.5, 0.5, 0.5, 1.0)));
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
-	glUniform4fv(drawSolid.colorLocation, 1, glm::value_ptr(glm::vec4(0.2, 0.2, 0.2, 1.0)));
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glEnable(GL_POLYGON_OFFSET_LINE);
-	glPolygonOffset(-0.5, -0.5);
-	glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
-	glDisable(GL_CULL_FACE);
-	glPointSize(5);
-	glUniform4fv(drawSolid.colorLocation, 1, glm::value_ptr(glm::vec4(0, 1, 0, 1.0)));
-	glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-	glEnable(GL_POLYGON_OFFSET_POINT);
-	glPolygonOffset(-0.6, -0.6);
-	glDrawArrays(GL_POINTS, 0, vertexCount);
-	//glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
-	glEnable(GL_CULL_FACE);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	if (modelRenderLine) {
+		glUniform4fv(drawSolid.colorLocation, 1, glm::value_ptr(glm::vec4(0.2, 0.2, 0.2, 1.0)));
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		glEnable(GL_POLYGON_OFFSET_LINE);
+		glPolygonOffset(-0.5, -0.5);
+		glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
+	if (modelRenderPoint) {
+		glDisable(GL_CULL_FACE);
+		glPointSize(5);
+		glUniform4fv(drawSolid.colorLocation, 1, glm::value_ptr(glm::vec4(0, 1, 0, 1.0)));
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+		glEnable(GL_POLYGON_OFFSET_POINT);
+		glPolygonOffset(-0.6, -0.6);
+		glDrawArrays(GL_POINTS, 0, vertexCount);
+		//glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
+		glEnable(GL_CULL_FACE);
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
