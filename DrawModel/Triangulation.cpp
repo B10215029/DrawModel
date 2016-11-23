@@ -1,6 +1,6 @@
 #include "Triangulation.h"
 
-MyMesh* Triangulation::CreateFace(void* contourPoints, int pointSize, int d)
+MyMesh* Triangulation::CreateFace(void* contourPoints, int pointSize, float aspect, float size, int d)
 {
 	float* cp = (float*)contourPoints;
 	std::vector<CDT::Vertex_handle> ContourPoint;
@@ -17,7 +17,7 @@ MyMesh* Triangulation::CreateFace(void* contourPoints, int pointSize, int d)
 	Mesher mesher(m_Triangulation);
 	mesher.refine_mesh();
 
-	mesher.set_criteria(Criteria(0.0125, 50));
+	mesher.set_criteria(Criteria(aspect, size));
 	mesher.refine_mesh();
 
 	std::cout << "Number of vertices: " << m_Triangulation.number_of_vertices() << std::endl;

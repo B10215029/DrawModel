@@ -14,7 +14,7 @@
 class Triangulation
 {
 public:
-	static MyMesh* CreateFace(void* contourPoints, int pointSize, int d = 3);
+	static MyMesh* CreateFace(void* contourPoints, int pointSize, float aspect, float size, int d = 3);
 	static int PointInContour(glm::dvec2 point, std::deque<glm::vec2> contour);
 	typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 

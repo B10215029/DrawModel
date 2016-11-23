@@ -35,6 +35,8 @@ public:
 	static float swellSize;
 	static bool modelRenderPoint;
 	static bool modelRenderLine;
+	static float triAspect;
+	static float triSize;
 
 	ModelPart();
 	~ModelPart();

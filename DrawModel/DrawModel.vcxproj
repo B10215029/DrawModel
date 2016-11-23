@@ -147,6 +147,7 @@
     <ClInclude Include="ModelPart.h" />
     <ClInclude Include="OpenGLEventTrigger.h" />
     <ClInclude Include="OpenGLPanel.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="ShaderUtility.h" />
   </ItemGroup>
   <ItemGroup>
@@ -160,6 +161,20 @@
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.h</DependentUpon>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shader1.bin" />
+    <None Include="shader\DrawColor.frag" />
+    <None Include="shader\DrawColor.vert" />
+    <None Include="shader\DrawSolidMesh.frag" />
+    <None Include="shader\DrawSolidMesh.vert" />
+    <None Include="shader\DrawStroke.frag" />
+    <None Include="shader\DrawStroke.vert" />
+    <None Include="shader\DrawTexture.frag" />
+    <None Include="shader\DrawTexture.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

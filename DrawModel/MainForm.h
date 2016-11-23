@@ -62,6 +62,14 @@ namespace DrawModel {
 			catch (...) {}
 			ModelPart::modelRenderPoint = checkBox1->Checked;
 			ModelPart::modelRenderLine = checkBox2->Checked;
+			try {
+				ModelPart::triAspect = float::Parse(textBox10->Text);
+			}
+			catch (...) {}
+			try {
+				ModelPart::triSize = float::Parse(textBox11->Text);
+			}
+			catch (...) {}
 		}
 
 	protected:
@@ -126,6 +134,12 @@ namespace DrawModel {
 	private: System::Windows::Forms::Label^  label12;
 	private: System::Windows::Forms::Label^  label13;
 private: System::Windows::Forms::Button^  button6;
+private: System::Windows::Forms::TabPage^  tabPage4;
+private: System::Windows::Forms::TableLayoutPanel^  tableLayoutPanel9;
+private: System::Windows::Forms::Label^  label14;
+private: System::Windows::Forms::Label^  label15;
+private: System::Windows::Forms::TextBox^  textBox10;
+private: System::Windows::Forms::TextBox^  textBox11;
 	protected:
 
 	private:
@@ -181,6 +195,12 @@ private: System::Windows::Forms::Button^  button6;
 			this->textBox8 = (gcnew System::Windows::Forms::TextBox());
 			this->textBox9 = (gcnew System::Windows::Forms::TextBox());
 			this->button4 = (gcnew System::Windows::Forms::Button());
+			this->tabPage4 = (gcnew System::Windows::Forms::TabPage());
+			this->tableLayoutPanel9 = (gcnew System::Windows::Forms::TableLayoutPanel());
+			this->label14 = (gcnew System::Windows::Forms::Label());
+			this->label15 = (gcnew System::Windows::Forms::Label());
+			this->textBox10 = (gcnew System::Windows::Forms::TextBox());
+			this->textBox11 = (gcnew System::Windows::Forms::TextBox());
 			this->button5 = (gcnew System::Windows::Forms::Button());
 			this->groupBox2 = (gcnew System::Windows::Forms::GroupBox());
 			this->tableLayoutPanel7 = (gcnew System::Windows::Forms::TableLayoutPanel());
@@ -203,6 +223,8 @@ private: System::Windows::Forms::Button^  button6;
 			this->tableLayoutPanel5->SuspendLayout();
 			this->tabPage3->SuspendLayout();
 			this->tableLayoutPanel6->SuspendLayout();
+			this->tabPage4->SuspendLayout();
+			this->tableLayoutPanel9->SuspendLayout();
 			this->groupBox2->SuspendLayout();
 			this->tableLayoutPanel7->SuspendLayout();
 			this->tableLayoutPanel8->SuspendLayout();
@@ -329,6 +351,7 @@ private: System::Windows::Forms::Button^  button6;
 			this->tabControl1->Controls->Add(this->tabPage1);
 			this->tabControl1->Controls->Add(this->tabPage2);
 			this->tabControl1->Controls->Add(this->tabPage3);
+			this->tabControl1->Controls->Add(this->tabPage4);
 			this->tabControl1->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->tabControl1->Location = System::Drawing::Point(3, 160);
 			this->tabControl1->Name = L"tabControl1";
@@ -671,6 +694,75 @@ private: System::Windows::Forms::Button^  button6;
 			this->button4->UseVisualStyleBackColor = true;
 			this->button4->Click += gcnew System::EventHandler(this, &MainForm::button4_Click);
 			// 
+			// tabPage4
+			// 
+			this->tabPage4->Controls->Add(this->tableLayoutPanel9);
+			this->tabPage4->Location = System::Drawing::Point(4, 22);
+			this->tabPage4->Name = L"tabPage4";
+			this->tabPage4->Padding = System::Windows::Forms::Padding(3);
+			this->tabPage4->Size = System::Drawing::Size(137, 125);
+			this->tabPage4->TabIndex = 3;
+			this->tabPage4->Text = L"Triangulation";
+			this->tabPage4->UseVisualStyleBackColor = true;
+			// 
+			// tableLayoutPanel9
+			// 
+			this->tableLayoutPanel9->ColumnCount = 2;
+			this->tableLayoutPanel9->ColumnStyles->Add((gcnew System::Windows::Forms::ColumnStyle(System::Windows::Forms::SizeType::Percent,
+				50)));
+			this->tableLayoutPanel9->ColumnStyles->Add((gcnew System::Windows::Forms::ColumnStyle(System::Windows::Forms::SizeType::Percent,
+				50)));
+			this->tableLayoutPanel9->Controls->Add(this->label14, 0, 0);
+			this->tableLayoutPanel9->Controls->Add(this->label15, 0, 1);
+			this->tableLayoutPanel9->Controls->Add(this->textBox10, 1, 0);
+			this->tableLayoutPanel9->Controls->Add(this->textBox11, 1, 1);
+			this->tableLayoutPanel9->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->tableLayoutPanel9->Location = System::Drawing::Point(3, 3);
+			this->tableLayoutPanel9->Name = L"tableLayoutPanel9";
+			this->tableLayoutPanel9->RowCount = 2;
+			this->tableLayoutPanel9->RowStyles->Add((gcnew System::Windows::Forms::RowStyle(System::Windows::Forms::SizeType::Percent, 50)));
+			this->tableLayoutPanel9->RowStyles->Add((gcnew System::Windows::Forms::RowStyle(System::Windows::Forms::SizeType::Percent, 50)));
+			this->tableLayoutPanel9->Size = System::Drawing::Size(131, 119);
+			this->tableLayoutPanel9->TabIndex = 0;
+			// 
+			// label14
+			// 
+			this->label14->AutoSize = true;
+			this->label14->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->label14->Location = System::Drawing::Point(3, 0);
+			this->label14->Name = L"label14";
+			this->label14->Size = System::Drawing::Size(59, 59);
+			this->label14->TabIndex = 0;
+			this->label14->Text = L"aspect";
+			// 
+			// label15
+			// 
+			this->label15->AutoSize = true;
+			this->label15->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->label15->Location = System::Drawing::Point(3, 59);
+			this->label15->Name = L"label15";
+			this->label15->Size = System::Drawing::Size(59, 60);
+			this->label15->TabIndex = 1;
+			this->label15->Text = L"size";
+			// 
+			// textBox10
+			// 
+			this->textBox10->Location = System::Drawing::Point(68, 3);
+			this->textBox10->Name = L"textBox10";
+			this->textBox10->Size = System::Drawing::Size(60, 22);
+			this->textBox10->TabIndex = 2;
+			this->textBox10->Text = L"0.125";
+			this->textBox10->TextChanged += gcnew System::EventHandler(this, &MainForm::textBox10_TextChanged);
+			// 
+			// textBox11
+			// 
+			this->textBox11->Location = System::Drawing::Point(68, 62);
+			this->textBox11->Name = L"textBox11";
+			this->textBox11->Size = System::Drawing::Size(60, 22);
+			this->textBox11->TabIndex = 3;
+			this->textBox11->Text = L"1";
+			this->textBox11->TextChanged += gcnew System::EventHandler(this, &MainForm::textBox11_TextChanged);
+			// 
 			// button5
 			// 
 			this->button5->Dock = System::Windows::Forms::DockStyle::Fill;
@@ -823,6 +915,9 @@ private: System::Windows::Forms::Button^  button6;
 			this->tabPage3->ResumeLayout(false);
 			this->tableLayoutPanel6->ResumeLayout(false);
 			this->tableLayoutPanel6->PerformLayout();
+			this->tabPage4->ResumeLayout(false);
+			this->tableLayoutPanel9->ResumeLayout(false);
+			this->tableLayoutPanel9->PerformLayout();
 			this->groupBox2->ResumeLayout(false);
 			this->tableLayoutPanel7->ResumeLayout(false);
 			this->tableLayoutPanel7->PerformLayout();
@@ -866,8 +961,11 @@ private: System::Void textBox2_TextChanged(System::Object^  sender, System::Even
 }
 private: System::Void button2_Click(System::Object^  sender, System::EventArgs^  e) {
 	if (listBox1->SelectedIndex >= 0) {
+		int select = listBox1->SelectedIndex;
 		drawPanel->RemovePart(listBox1->SelectedIndex);
 		listBox1->Items->RemoveAt(listBox1->SelectedIndex);
+		if (select > 0)
+			listBox1->SelectedIndex = select - 1;
 	}
 }
 private: System::Void label5_Click(System::Object^  sender, System::EventArgs^  e) {
@@ -949,6 +1047,18 @@ private: System::Void timer1_Tick(System::Object^  sender, System::EventArgs^  e
 }
 private: System::Void button6_Click(System::Object^  sender, System::EventArgs^  e) {
 	drawPanel->SetView(DrawPanel::ViewDirection::ResetView);
+}
+private: System::Void textBox10_TextChanged(System::Object^  sender, System::EventArgs^  e) {
+	try {
+		ModelPart::triAspect = float::Parse(textBox10->Text);
+	}
+	catch (...) {}
+}
+private: System::Void textBox11_TextChanged(System::Object^  sender, System::EventArgs^  e) {
+	try {
+		ModelPart::triSize = float::Parse(textBox11->Text);
+	}
+	catch (...) {}
 }
 };
 }

@@ -1,6 +1,7 @@
 #include "ModelPart.h"
 #include "ShaderUtility.h"
 #include "Triangulation.h"
+#include "resource.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -22,14 +23,16 @@ float ModelPart::swellPower = 1;
 float ModelPart::swellSize = 0;
 bool ModelPart::modelRenderPoint = true;
 bool ModelPart::modelRenderLine = true;
+float ModelPart::triAspect = 0.0125;
+float ModelPart::triSize = 50;
 
 void ModelPart::InitProgram()
 {
-	drawTexture.program = loadProgram("./shader/DrawTexture.vert", "./shader/DrawTexture.frag");
+	drawTexture.program = loadProgram(IDR_SHADER3, IDR_SHADER4);
 	drawTexture.textureLocation = glGetUniformLocation(drawTexture.program, "image");
-	drawColor.program = loadProgram("./shader/DrawColor.vert", "./shader/DrawColor.frag");
+	drawColor.program = loadProgram(IDR_SHADER6, IDR_SHADER5);
 	drawColor.colorLocation = glGetUniformLocation(drawColor.program, "color");
-	drawStroke.program = loadProgram("./shader/DrawStroke.vert", "./shader/DrawStroke.frag");
+	drawStroke.program = loadProgram(IDR_SHADER8, IDR_SHADER7);
 	drawStroke.strokeSizeLocation = glGetUniformLocation(drawStroke.program, "strokeSize");
 	drawStroke.colorLocation = glGetUniformLocation(drawStroke.program, "color");
 	drawStroke.colorTextureLocation = glGetUniformLocation(drawStroke.program, "colorTexture");
@@ -37,7 +40,7 @@ void ModelPart::InitProgram()
 	drawStroke.modelMatrixLocation = glGetUniformLocation(drawStroke.program, "model_matrix");
 	drawStroke.viewMatrixLocation = glGetUniformLocation(drawStroke.program, "view_matrix");
 	drawStroke.projectionMatrixLocation = glGetUniformLocation(drawStroke.program, "projection_matrix");
-	drawSolid.program = loadProgram("./shader/DrawSolidMesh.vert", "./shader/DrawSolidMesh.frag");
+	drawSolid.program = loadProgram(IDR_SHADER1, IDR_SHADER2);
 	drawSolid.modelMatrixLocation = glGetUniformLocation(drawSolid.program, "model_matrix");
 	drawSolid.viewMatrixLocation = glGetUniformLocation(drawSolid.program, "view_matrix");
 	drawSolid.projectionMatrixLocation = glGetUniformLocation(drawSolid.program, "projection_matrix");
@@ -227,7 +230,7 @@ void ModelPart::CreateMesh()
 {
 	printf("CreateMesh\n");
 	//mesh = MyMesh::CreateFace(points);
-	mesh = Triangulation::CreateFace(&points[0], points.size());
+	mesh = Triangulation::CreateFace(&points[0], points.size(), triAspect, triSize);
 	mesh->Extrude(extrudeThickness, extrudeDivisions, extrudeOffset, swellSize, swellPower);
 	state = ModelState::STATE_MODEL;
 }

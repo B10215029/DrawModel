@@ -60,10 +60,47 @@
     <ClInclude Include="ModelPart.h">
       <Filter>標頭檔</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MainForm.resx">
       <Filter>資源檔</Filter>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc">
+      <Filter>資源檔</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shader1.bin">
+      <Filter>資源檔</Filter>
+    </None>
+    <None Include="shader\DrawSolidMesh.vert">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="shader\DrawSolidMesh.frag">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="shader\DrawTexture.vert">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="shader\DrawColor.frag">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="shader\DrawColor.vert">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="shader\DrawStroke.frag">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="shader\DrawStroke.vert">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="shader\DrawTexture.frag">
+      <Filter>Shader</Filter>
+    </None>
   </ItemGroup>
 </Project>
