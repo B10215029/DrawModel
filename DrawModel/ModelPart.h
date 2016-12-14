@@ -78,6 +78,9 @@ private:
 		GLuint viewMatrixLocation;
 		GLuint projectionMatrixLocation;
 		GLuint colorLocation;
+		GLuint textureLocation;
+		GLuint textureHandle;
+		GLuint useTextureLocation;
 	} drawSolid;
 
 	GLuint vao, vbo, ebo;

@@ -45,7 +45,11 @@ void ModelPart::InitProgram()
 	drawSolid.viewMatrixLocation = glGetUniformLocation(drawSolid.program, "view_matrix");
 	drawSolid.projectionMatrixLocation = glGetUniformLocation(drawSolid.program, "projection_matrix");
 	drawSolid.colorLocation = glGetUniformLocation(drawSolid.program, "color");
-	strokeTextureHandle = loadTextureFromFilePNG("./stroke/stroke1.png");
+	drawSolid.textureLocation = glGetUniformLocation(drawSolid.program, "tex0");
+	drawSolid.useTextureLocation = glGetUniformLocation(drawSolid.program, "useTexture");
+	drawSolid.textureHandle = loadTextureFromFilePNG("grid32.png");
+	//drawSolid.textureHandle = loadTextureFromFilePNG("testtexture.png");
+	//strokeTextureHandle = loadTextureFromFilePNG("./stroke/stroke1.png");
 	//modelMatrix = glm::mat4(1.0f);
 	//viewMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, -1.5));
 	//projectionMatrix = glm::perspective(glm::radians(45.0f), (float)800 / (float)800, 0.1f, 10000.f);;
@@ -181,9 +185,14 @@ void ModelPart::RenderModel()
 	glUniformMatrix4fv(drawSolid.modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
 	glUniformMatrix4fv(drawSolid.viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
 	glUniformMatrix4fv(drawSolid.projectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+	glUniform1i(drawSolid.textureLocation, 0);
+	glUniform1i(drawSolid.useTextureLocation, 1);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, drawSolid.textureHandle);
 	glBindVertexArray(vao);
 	glUniform4fv(drawSolid.colorLocation, 1, glm::value_ptr(glm::vec4(0.5, 0.5, 0.5, 1.0)));
 	glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
+	glUniform1i(drawSolid.useTextureLocation, 0);
 	if (modelRenderLine) {
 		glUniform4fv(drawSolid.colorLocation, 1, glm::value_ptr(glm::vec4(0.2, 0.2, 0.2, 1.0)));
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -231,8 +240,45 @@ void ModelPart::CreateMesh()
 	printf("CreateMesh\n");
 	//mesh = MyMesh::CreateFace(points);
 	mesh = Triangulation::CreateFace(&points[0], points.size(), triAspect, triSize);
+	//OpenMesh::Vec3d avg(0, 0, 0);
+	//int bpc = 0;
+	//for (MyMesh::VertexIter v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it) {
+	//	if (mesh->is_boundary(v_it)) {
+	//		avg += mesh->point(v_it);
+	//		bpc++;
+	//	}
+	//}
+	//avg /= bpc;
+	//MyMesh::VertexHandle minvh(0);
+	//float mindis = FLT_MAX;
+	//for (MyMesh::VertexIter v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it) {
+	//	if ((mesh->point(v_it) - avg).norm() < mindis) {
+	//		minvh = v_it;
+	//		mindis = (mesh->point(v_it) - avg).norm();
+	//	}
+	//}
 	mesh->Extrude(extrudeThickness, extrudeDivisions, extrudeOffset, swellSize, swellPower);
 	state = ModelState::STATE_MODEL;
+
+	OpenMesh::IO::Options opt(OpenMesh::IO::Options::VertexNormal | OpenMesh::IO::Options::VertexTexCoord | OpenMesh::IO::Options::FaceTexCoord);
+	OpenMesh::IO::read_mesh(*mesh, "ballH.obj", opt);
+	if (opt.check(OpenMesh::IO::Options::VertexNormal)) {
+		printf("VertexNormal\n");
+	}
+	if (opt.check(OpenMesh::IO::Options::VertexTexCoord)) {
+		printf("VertexTexCoord\n");
+	}
+	if (mesh->has_vertex_normals()) {
+		printf("has_vertex_normals\n");
+	}
+	if (mesh->has_vertex_texcoords2D()) {
+		printf("has_vertex_texcoords2D\n");
+	}
+	mesh->update_normals();
+
+	mesh->ResetUV();
+	mesh->ComputeUV();
+	//mesh->LaplacianSmooth();
 }
 
 void ModelPart::ExtractionMesh(float s)
@@ -291,10 +337,12 @@ void ModelPart::UpdateMeshBuffer()
 
 	maxPointDist = 0;
 	vertexCount = mesh->n_vertices();
-	GLdouble *vertexData = new GLdouble[vertexCount * 6];
+	GLdouble *vertexData = new GLdouble[vertexCount * 8];
 	for (MyMesh::VertexIter v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it) {
-		memcpy(vertexData + (v_it->idx() * 6), mesh->point(v_it.handle()).data(), sizeof(GLdouble) * 3);
-		memcpy(vertexData + (v_it->idx() * 6 + 3), mesh->normal(v_it.handle()).data(), sizeof(GLdouble) * 3);
+		memcpy(vertexData + (v_it->idx() * 8), mesh->point(v_it.handle()).data(), sizeof(GLdouble) * 3);
+		memcpy(vertexData + (v_it->idx() * 8 + 3), mesh->normal(v_it.handle()).data(), sizeof(GLdouble) * 3);
+		vertexData[v_it->idx() * 8 + 6] = mesh->texcoord2D(v_it.handle()).data()[0];
+		vertexData[v_it->idx() * 8 + 7] = mesh->texcoord2D(v_it.handle()).data()[1];
 		for (int i = 0; i < 3; i++) {
 			if (abs(mesh->point(v_it.handle())[i]) > maxPointDist) {
 				maxPointDist = abs(mesh->point(v_it.handle())[i]);
@@ -303,11 +351,13 @@ void ModelPart::UpdateMeshBuffer()
 	}
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, vertexCount * sizeof(GLdouble) * 6, vertexData, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, sizeof(GLdouble) * 6, 0);
-	glVertexAttribPointer(1, 3, GL_DOUBLE, GL_FALSE, sizeof(GLdouble) * 6, (GLvoid*)(sizeof(GLdouble) * 3));
+	glBufferData(GL_ARRAY_BUFFER, vertexCount * sizeof(GLdouble) * 8, vertexData, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, sizeof(GLdouble) * 8, 0);
+	glVertexAttribPointer(1, 3, GL_DOUBLE, GL_FALSE, sizeof(GLdouble) * 8, (GLvoid*)(sizeof(GLdouble) * 3));
+	glVertexAttribPointer(2, 2, GL_DOUBLE, GL_FALSE, sizeof(GLdouble) * 8, (GLvoid*)(sizeof(GLdouble) * 6));
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
 	delete[] vertexData;
 
 	faceCount = mesh->n_faces();
@@ -322,6 +372,42 @@ void ModelPart::UpdateMeshBuffer()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, faceCount * sizeof(GLuint) * 3, vertexIndices, GL_STATIC_DRAW);
 	delete[] vertexIndices;
+
+
+
+	//maxPointDist = 0;
+	//vertexCount = 0;
+	//faceCount = mesh->n_faces();
+	//GLdouble *vertexData = new GLdouble[faceCount * 3 * 8];
+	//GLuint *vertexIndices = new GLuint[faceCount * 3];
+	//for (MyMesh::FaceIter f_it = mesh->faces_begin(); f_it != mesh->faces_end(); ++f_it) {
+	//	for (MyMesh::FaceHalfedgeIter fhe_it = mesh->fh_begin(f_it.handle()); fhe_it != mesh->fh_end(f_it.handle()); ++fhe_it) {
+	//		memcpy(vertexData + (vertexCount * 8 + 0), mesh->point(mesh->to_vertex_handle(fhe_it)).data(), sizeof(GLdouble) * 3);
+	//		memcpy(vertexData + (vertexCount * 8 + 3), mesh->normal(mesh->to_vertex_handle(fhe_it)).data(), sizeof(GLdouble) * 3);
+	//		//vertexData[vertexCount * 8 + 6] = 0.5;
+	//		//vertexData[vertexCount * 8 + 7] = 0.5;
+	//		vertexData[vertexCount * 8 + 6] = mesh->texcoord2D(fhe_it.handle()).data()[0];
+	//		vertexData[vertexCount * 8 + 7] = mesh->texcoord2D(fhe_it.handle()).data()[1];
+	//		vertexIndices[vertexCount] = vertexCount;
+	//		vertexCount++;
+	//	}
+	//}
+	//glGenBuffers(1, &vbo);
+	//glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	//glBufferData(GL_ARRAY_BUFFER, vertexCount * sizeof(GLdouble) * 8, vertexData, GL_STATIC_DRAW);
+	//glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, sizeof(GLdouble) * 8, 0);
+	//glVertexAttribPointer(1, 3, GL_DOUBLE, GL_FALSE, sizeof(GLdouble) * 8, (GLvoid*)(sizeof(GLdouble) * 3));
+	//glVertexAttribPointer(2, 2, GL_DOUBLE, GL_FALSE, sizeof(GLdouble) * 8, (GLvoid*)(sizeof(GLdouble) * 6));
+	//glEnableVertexAttribArray(0);
+	//glEnableVertexAttribArray(1);
+	//glEnableVertexAttribArray(2);
+	//glGenBuffers(1, &ebo);
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, faceCount * sizeof(GLuint) * 3, vertexIndices, GL_STATIC_DRAW);
+	//delete[] vertexData;
+	//delete[] vertexIndices;
+
+
 
 	glBindVertexArray(0);
 }

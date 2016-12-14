@@ -6,8 +6,21 @@ MyMesh* Triangulation::CreateFace(void* contourPoints, int pointSize, float aspe
 	std::vector<CDT::Vertex_handle> ContourPoint;
 	std::deque<glm::vec2> contour;
 	CDT m_Triangulation;
+	double a1 = cp[3] - cp[0];
+	double b1 = cp[4] - cp[1];
+	double c1 = cp[5] - cp[2];
+	double a2 = cp[pointSize * d - 3] - cp[0];
+	double b2 = cp[pointSize * d - 2] - cp[1];
+	double c2 = cp[pointSize * d - 1] - cp[2];
+	double zx = (b2 * c1 - b1 * c2) / (b2 * a1 - b1 * a2);
+	double zy = (a2 * c1 - a1 * c2) / (a2 * b1 - a1 * b2);
+	double xScal = sqrt(zx * zx + 1);
+	double yScal = sqrt(zy * zy + 1);
+	//xScal = 1;
+	//yScal = 1;
 	for (int i = 0; i < pointSize; i++) {
-		CDT::Vertex_handle vp = m_Triangulation.insert(CDT::Point(cp[i * d + 0], cp[i * d + 1]));
+		CDT::Vertex_handle vp = m_Triangulation.insert(CDT::Point(cp[i * d + 0] * xScal, cp[i * d + 1] * yScal));
+		//CDT::Vertex_handle vp = m_Triangulation.insert(CDT::Point(cp[i * d + 0], cp[i * d + 1]));
 		ContourPoint.push_back(vp);
 		contour.push_back(glm::vec2(cp[i * d + 0], cp[i * d + 1]));
 	}
@@ -35,21 +48,14 @@ MyMesh* Triangulation::CreateFace(void* contourPoints, int pointSize, float aspe
 	//	m_Triangles.push_back(t);
 	//}
 
-	double a1 = cp[3] - cp[0];
-	double b1 = cp[4] - cp[1];
-	double c1 = cp[5] - cp[2];
-	double a2 = cp[pointSize * d - 3] - cp[0];
-	double b2 = cp[pointSize * d - 2] - cp[1];
-	double c2 = cp[pointSize * d - 1] - cp[2];
-	double zx = (b2 * c1 - b1 * c2) / (b2 * a1 - b1 * a2);
-	double zy = (a2 * c1 - a1 * c2) / (a2 * b1 - a1 * b2);
 	MyMesh* mesh = new MyMesh();
 	MyMesh::VertexHandle vh[3];
 	double thick = 0.3;
 	std::vector<MyMesh::VertexHandle> vertsOM;
 	std::vector<CDT::Vertex_handle> vertsCGAL;
 	for (CDT::Finite_vertices_iterator vc = m_Triangulation.finite_vertices_begin(); vc != m_Triangulation.finite_vertices_end(); ++vc) {
-		vertsOM.push_back(mesh->add_vertex(MyMesh::Point(vc->point()[0], vc->point()[1], (vc->point()[0] - cp[0]) * zx + (vc->point()[1] - cp[1]) * zy + cp[2])));
+		vertsOM.push_back(mesh->add_vertex(MyMesh::Point(vc->point()[0] / xScal, vc->point()[1] / yScal, (vc->point()[0] / xScal - cp[0]) * zx + (vc->point()[1] / yScal - cp[1]) * zy + cp[2])));
+		//vertsOM.push_back(mesh->add_vertex(MyMesh::Point(vc->point()[0], vc->point()[1], (vc->point()[0] - cp[0]) * zx + (vc->point()[1] - cp[1]) * zy + cp[2])));
 		vertsCGAL.push_back(vc->handle());
 		//printf("vh: %d\n", vc->handle());
 	}

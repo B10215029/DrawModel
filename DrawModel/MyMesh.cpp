@@ -6,14 +6,18 @@
 #include <deque>
 #include <Eigen/Sparse>
 #include <OpenMesh/Tools/Smoother/JacobiLaplaceSmootherT.hh>
+#include <glm/gtx/rotate_vector.hpp>
+#include <glm/gtx/vector_angle.hpp>
 
 OpenMesh::EPropHandleT<double> MyMesh::edgeWeight;
 OpenMesh::VPropHandleT<double> MyMesh::oneRingArea;
+OpenMesh::VPropHandleT<bool> MyMesh::hasUV;
 
 MyMesh::MyMesh()
 {
 	add_property(edgeWeight);
 	add_property(oneRingArea);
+	add_property(hasUV);
 	hasExtraction = false;
 }
 
@@ -140,7 +144,108 @@ void MyMesh::Extraction(float s)
 
 void MyMesh::LaplacianSmooth()
 {
+	for (VertexIter v_it = vertices_begin(); v_it != vertices_end(); ++v_it) {
+		printf("%d: %f, %f\n", v_it->idx(), texcoord2D(v_it).data()[0], texcoord2D(v_it).data()[1]);
+	}
+}
 
+void MyMesh::ResetUV()
+{
+	for (VertexIter v_it = vertices_begin(); v_it != vertices_end(); ++v_it) {
+		property(hasUV, v_it) = false;
+	}
+}
+
+glm::dvec3 MyMesh::PointToVec3(MyMesh::Point p) {
+	static double* d;
+	d = p.data();
+	return glm::dvec3(d[0], d[1], d[2]);
+}
+
+void MyMesh::ComputeUV(VertexHandle vh, OpenMesh::Vec2f centerUV)
+{
+	glm::dvec3 p = PointToVec3(point(vh));
+	std::deque<VertexHandle> queue;
+	glm::dvec3 np = PointToVec3(normal(vh));
+	glm::dvec3 xp = glm::normalize(glm::cross(glm::dvec3(0, 1, 0), np));
+	glm::dvec3 yp = glm::normalize(glm::cross(np, xp));
+	set_texcoord2D(vh, centerUV);
+	property(hasUV, vh) = true;
+	queue.push_back(vh);
+	int i = 0;
+	while (!queue.empty()) {
+		VertexHandle currentVh = queue.front();
+		queue.pop_front();
+		//printf("%d: %lf, %lf\n", i++, texcoord2D(currentVh).data()[0], texcoord2D(currentVh).data()[1]);
+		glm::dvec3 nr = PointToVec3(normal(currentVh));
+		glm::dvec3 xr = glm::normalize(glm::cross(glm::dvec3(0, 1, 0), nr));
+		glm::dvec3 yr = glm::normalize(glm::cross(nr, xr));
+
+		double na = glm::angle(np, nr); // normal angle
+		//printf("na: %lf, %lf\n", glm::length(glm::rotate(nr, na, glm::cross(np, nr)) - np), glm::length(glm::rotate(nr, na, glm::cross(nr, np)) - np));
+		//if (glm::length(glm::rotate(nr, na, glm::cross(np, nr)) - np) > 0.000000001) {
+		//	printf("");
+		//}
+		glm::dvec3 xrp = glm::rotate(xr, na, glm::cross(nr, np));
+		double theta = glm::angle(xrp, xp);
+		//printf("theta: %lf, %lf, %d\n", glm::length(glm::rotate(xrp, theta, np) - xp), glm::length(glm::rotate(xrp, theta, -np) - xp), glm::dot(glm::cross(xrp, xp), np) > 0);
+		//if (glm::length(glm::rotate(xrp, theta, np) - xp) > 0.000000001) {
+		//	printf("");
+		//}
+		if (glm::dot(glm::cross(xrp, xp), np) < 0)
+			theta *= -1;
+		if (abs(glm::dot(np, nr) - 1) < 0.00001)
+			theta = 0;
+		//printf("na test: %lf, theta test: %lf, theta: %lf\n", glm::length(glm::rotate(nr, na, glm::cross(nr, np)) - np), glm::length((glm::rotate(xrp, theta, np)) - xp), theta);
+		//printf("rl: %lf, theta: %lf\n", rl, theta);
+		//printf("rl: %lf, theta: %lf\n", glm::degrees(na), glm::degrees(theta));
+
+		for (VertexVertexIter vv_it = vv_begin(currentVh); vv_it != vv_end(currentVh); ++vv_it) {
+			if (property(hasUV, vv_it))
+				continue;
+			//glm::dvec3 p1 = PointToVec3(point(vv_it));
+			//glm::dvec3 p2 = PointToVec3(point(currentVh));
+			////if (glm::length(p1 - p) - glm::length(p2 - p) < 0.03)
+			////	continue;
+			//if (p1.y == p2.y)
+			//	continue;
+			glm::dvec3 v = PointToVec3(point(vv_it) - point(currentVh));
+			glm::dvec2 uv(glm::dot(v, xr), glm::dot(v, yr));
+			uv = glm::normalize(uv) * glm::length(v);
+			uv = glm::rotate(uv, -theta);
+			OpenMesh::Vec2f texV = OpenMesh::Vec2f(uv.x, uv.y) + texcoord2D(currentVh);
+			set_texcoord2D(vv_it, texV);
+			property(hasUV, vv_it) = true;
+			queue.push_back(vv_it);
+			printf("ID: %03d, %03d, UV: %lf, %lf, %lf\n", currentVh.idx(), vv_it->idx(), (texV - OpenMesh::Vec2f(0.5, 0.5)).norm(), texV.data()[0], texV.data()[1]);
+		}
+	}
+
+
+	//const double* d = normal(vh).data();
+	//glm::vec3 normal(d[0], d[1], d[2]);
+	//glm::vec3 base1 = glm::normalize(glm::cross(normal, glm::vec3(1, 0, 0)));
+	//glm::vec3 base2 = glm::normalize(glm::cross(normal, base1));
+	//set_texcoord2D(vh, centerUV);
+	//property(hasUV, vh) = true;
+	//for (VertexVertexIter vv_it = vv_begin(vh); vv_it != vv_end(vh); ++vv_it) {
+	//	if (property(hasUV, vv_it))
+	//		continue;
+	//	d = (point(vv_it) - point(vh)).data();
+	//	glm::vec3 v(d[0], d[1], d[2]);
+	//	glm::vec2 uv(glm::dot(v, base1), glm::dot(v, base2));
+	//	uv = glm::normalize(uv) * glm::length(v);
+	//	OpenMesh::Vec2f texV = OpenMesh::Vec2f(uv.x, uv.y) * 10 + centerUV;
+	//	ComputeUV(vv_it.handle(), OpenMesh::Vec2f(uv.x, uv.y));
+	//	//set_texcoord2D(vv_it, texV);
+	//}
+
+	//for (VertexIter v_it = vertices_begin(); v_it != vertices_end(); ++v_it) {
+	//	set_texcoord2D(v_it, OpenMesh::Vec2f((float)rand() / RAND_MAX, (float)rand() / RAND_MAX));
+	//}
+	//for (HalfedgeIter he_it = halfedges_begin(); he_it != halfedges_end(); ++he_it) {
+	//	set_texcoord2D(he_it, OpenMesh::Vec2f((float)rand() / RAND_MAX, (float)rand() / RAND_MAX));
+	//}
 }
 
 void MyMesh::UpdateEdgeWeight()
@@ -265,38 +370,46 @@ void MyMesh::Extrude(float thickness, int divisions, float offsetZ, float swellS
 	}
 	//size with power
 
+	double maxDistance = 0;
 	for (int i = 0; i < vertexCount; i++)
 	{
-		double minDistance = -1;
-		double maxDistance = -1;
-		if (is_boundary(vertex_handle(i))) {
-
-		}
-		else {
+		if (!is_boundary(vertex_handle(i))) {
+			double minDistance = FLT_MAX;
 			for (int j = 0; j < boundaryVertexCount; j++)
 			{
-				point(vertex_handle(i));
-				//point(vertex_handle(i)) += extrudeDirection * 2;
-
 				double distance = sqrt(
 					pow(point(boundaryVertices[j]).data()[0] - point(vertex_handle(i)).data()[0], 2) +
 					pow(point(boundaryVertices[j]).data()[1] - point(vertex_handle(i)).data()[1], 2) +
 					pow(point(boundaryVertices[j]).data()[2] - point(vertex_handle(i)).data()[2], 2)
 				);
-				if (minDistance < 0 || minDistance >= distance) {
+				if (minDistance > distance) {
 					minDistance = distance;
 				}
-				if (maxDistance < 0 || maxDistance <= distance) {
-					maxDistance = distance;
+			}
+			if (maxDistance < minDistance) {
+				maxDistance = minDistance;
+			}
+		}
+	}
+	for (int i = 0; i < vertexCount; i++)
+	{
+		if (!is_boundary(vertex_handle(i))) {
+			double minDistance = FLT_MAX;
+			for (int j = 0; j < boundaryVertexCount; j++)
+			{
+				double distance = sqrt(
+					pow(point(boundaryVertices[j]).data()[0] - point(vertex_handle(i)).data()[0], 2) +
+					pow(point(boundaryVertices[j]).data()[1] - point(vertex_handle(i)).data()[1], 2) +
+					pow(point(boundaryVertices[j]).data()[2] - point(vertex_handle(i)).data()[2], 2)
+				);
+				if (minDistance > distance) {
+					minDistance = distance;
 				}
 			}
-
-			double moveDistance = pow(minDistance/(maxDistance), swellPower) * swellSize;
+			double moveDistance = pow(minDistance / maxDistance, swellPower) * swellSize;
 			point(vertex_handle(i)) -= extrudeDirection * moveDistance;
 			point(vertex_handle(i + vertexCount)) += extrudeDirection * moveDistance;
 		}
-		
-		
 	}
 
 	update_normals();

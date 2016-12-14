@@ -38,7 +38,7 @@ namespace DrawModel {
 				ModelPart::pointInterval = float::Parse(textBox2->Text);
 			}
 			catch (...) {}
-			this->label5->BackgroundImage = Image::FromFile("./stroke/stroke1.png");
+			//this->label5->BackgroundImage = Image::FromFile("./stroke/stroke1.png");
 			this->label5->BackgroundImageLayout = ImageLayout::Stretch;
 			try {
 				ModelPart::extrudeThickness = float::Parse(textBox3->Text);
