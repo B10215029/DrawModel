@@ -44,6 +44,8 @@ public:
 	void RenderStroke();
 	void RenderLine();
 	void RenderPoint();
+	void RenderContour();
+	void RenderUV();
 	void RenderModel();
 	void AddPoint(float x, float y, float z);
 	void AddPoint(glm::vec3 point);
@@ -60,6 +62,9 @@ private:
 	} drawTexture;
 	static struct DrawColorProgram {
 		GLuint program;
+		GLuint modelMatrixLocation;
+		GLuint viewMatrixLocation;
+		GLuint projectionMatrixLocation;
 		GLuint colorLocation;
 	} drawColor;
 	static struct DrawStrokeProgram {
@@ -90,6 +95,7 @@ private:
 	MyMesh* mesh;
 	GLuint strokeFBO;
 	GLuint strokeFBOColorTexture;
+	glm::mat4 mvp;
 	std::vector<glm::vec3> points;
 	std::queue<glm::vec3> pointQueue;
 };

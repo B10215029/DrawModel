@@ -31,6 +31,9 @@ void ModelPart::InitProgram()
 	drawTexture.program = loadProgram(IDR_SHADER3, IDR_SHADER4);
 	drawTexture.textureLocation = glGetUniformLocation(drawTexture.program, "image");
 	drawColor.program = loadProgram(IDR_SHADER6, IDR_SHADER5);
+	drawColor.modelMatrixLocation = glGetUniformLocation(drawColor.program, "model_matrix");
+	drawColor.viewMatrixLocation = glGetUniformLocation(drawColor.program, "view_matrix");
+	drawColor.projectionMatrixLocation = glGetUniformLocation(drawColor.program, "projection_matrix");
 	drawColor.colorLocation = glGetUniformLocation(drawColor.program, "color");
 	drawStroke.program = loadProgram(IDR_SHADER8, IDR_SHADER7);
 	drawStroke.strokeSizeLocation = glGetUniformLocation(drawStroke.program, "strokeSize");
@@ -84,6 +87,7 @@ void ModelPart::SavePartsToOBJ(std::deque<ModelPart*> parts, const char* fileNam
 ModelPart::ModelPart()
 {
 	mesh = NULL;
+	mvp = projectionMatrix * viewMatrix * modelMatrix;
 	state = ModelState::STATE_NONE;
 }
 
@@ -98,7 +102,8 @@ void ModelPart::Render()
 		//RenderLine();
 	}
 	else {
-		RenderStroke();
+		RenderContour();
+		//RenderStroke();
 		//RenderLine();
 		//RenderPoint();
 	}
@@ -173,6 +178,38 @@ void ModelPart::RenderPoint()
 	glDrawArrays(GL_POINTS, 0, points.size());
 }
 
+void ModelPart::RenderContour()
+{
+	glBindVertexArray(0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glLineWidth(3);
+	glUseProgram(drawColor.program);
+	glUniformMatrix4fv(drawColor.modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+	glUniformMatrix4fv(drawColor.viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+	glUniformMatrix4fv(drawColor.projectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+	glUniform4fv(drawColor.colorLocation, 1, glm::value_ptr(strokeColor));
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, &points[0]);
+	glDrawArrays(GL_LINE_STRIP, 0, points.size());
+
+	glPointSize(5);
+	glClear(GL_DEPTH_BUFFER_BIT);
+	glUseProgram(drawColor.program);
+	glUniformMatrix4fv(drawColor.modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+	glUniformMatrix4fv(drawColor.viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+	glUniformMatrix4fv(drawColor.projectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+	glUniform4fv(drawColor.colorLocation, 1, glm::value_ptr(glm::vec4(0, 1, 0, 1)));
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, &points[0]);
+	glDrawArrays(GL_POINTS, 0, points.size());
+}
+
+void ModelPart::RenderUV()
+{
+
+}
+
 void ModelPart::RenderModel()
 {
 	glBindVertexArray(0);
@@ -240,7 +277,7 @@ void ModelPart::CreateMesh()
 	printf("CreateMesh\n");
 	//mesh = MyMesh::CreateFace(points);
 	//mesh = Triangulation::CreateFace(&points[0], points.size(), triAspect, triSize);
-	mesh = Triangulation::CreateFace(points, projectionMatrix * viewMatrix * modelMatrix, triAspect, triSize);
+	mesh = Triangulation::CreateFace(points, mvp, triAspect, triSize);
 	OpenMesh::Vec3d avg(0, 0, 0);
 	int bpc = 0;
 	for (MyMesh::VertexIter v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it) {
