@@ -23,6 +23,14 @@ public:
 		ResetView
 	};
 
+	enum OperateMode
+	{
+		PointMode,
+		CreateMode,
+		DrawMode,
+		DeformationMode
+	};
+
 	DrawPanel();
 	~DrawPanel();
 	void Initialize();
@@ -42,6 +50,7 @@ public:
 	bool cleanStroke;
 	glm::vec3 transform;
 	glm::vec3 rotation;
+	OperateMode operateMode;
 
 private:
 	glm::ivec2 previousMousePosition;

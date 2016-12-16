@@ -239,7 +239,8 @@ void ModelPart::CreateMesh()
 {
 	printf("CreateMesh\n");
 	//mesh = MyMesh::CreateFace(points);
-	mesh = Triangulation::CreateFace(&points[0], points.size(), triAspect, triSize);
+	//mesh = Triangulation::CreateFace(&points[0], points.size(), triAspect, triSize);
+	mesh = Triangulation::CreateFace(points, projectionMatrix * viewMatrix * modelMatrix, triAspect, triSize);
 	OpenMesh::Vec3d avg(0, 0, 0);
 	int bpc = 0;
 	for (MyMesh::VertexIter v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it) {

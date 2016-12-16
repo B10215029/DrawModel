@@ -81,6 +81,63 @@ MyMesh* Triangulation::CreateFace(void* contourPoints, int pointSize, float aspe
 	return mesh;
 }
 
+MyMesh* Triangulation::CreateFace(std::vector<glm::vec3> contourPoints, glm::mat4 mvp, float aspect, float size)
+{
+	glm::mat4 mvpInv = glm::inverse(mvp);
+	std::vector<CDT::Vertex_handle> ContourPoint;
+	std::deque<glm::vec2> contour;
+	CDT m_Triangulation;
+	float pz = (mvp * glm::vec4(contourPoints[0], 1)).z / (mvp * glm::vec4(contourPoints[0], 1)).w;
+	for (int i = 0; i < contourPoints.size(); i++) {
+		glm::vec4 cp = mvp * glm::vec4(contourPoints[i], 1);
+		cp /= cp.w;
+		CDT::Vertex_handle vp = m_Triangulation.insert(CDT::Point(cp.x, cp.y));
+		ContourPoint.push_back(vp);
+		contour.push_back(contourPoints[i]);
+	}
+	for (int i = 0; i < ContourPoint.size(); i++) {
+		m_Triangulation.insert_constraint(ContourPoint[i], ContourPoint[(i + 1) % ContourPoint.size()]);
+	}
+	Mesher mesher(m_Triangulation);
+	mesher.refine_mesh();
+
+	mesher.set_criteria(Criteria(aspect, size));
+	mesher.refine_mesh();
+
+	std::cout << "Number of vertices: " << m_Triangulation.number_of_vertices() << std::endl;
+	std::cout << "Number of finite faces: " << m_Triangulation.number_of_faces() << std::endl;
+
+	MyMesh* mesh = new MyMesh();
+	MyMesh::VertexHandle vh[3];
+	double thick = 0.3;
+	std::vector<MyMesh::VertexHandle> vertsOM;
+	std::vector<CDT::Vertex_handle> vertsCGAL;
+	for (CDT::Finite_vertices_iterator vc = m_Triangulation.finite_vertices_begin(); vc != m_Triangulation.finite_vertices_end(); ++vc) {
+		glm::vec4 rp(vc->point()[0], vc->point()[1], pz, 1);
+		rp = mvpInv * rp;
+		rp /= rp.w;
+		vertsOM.push_back(mesh->add_vertex(MyMesh::Point(rp.x, rp.y, rp.z)));
+		vertsCGAL.push_back(vc->handle());
+	}
+	glm::vec2 fp[3];
+	for (CDT::Finite_faces_iterator fc = m_Triangulation.finite_faces_begin(); fc != m_Triangulation.finite_faces_end(); ++fc) {
+		vh[0] = vertsOM[std::find(vertsCGAL.begin(), vertsCGAL.end(), fc->vertex(0)->handle()) - vertsCGAL.begin()];
+		vh[1] = vertsOM[std::find(vertsCGAL.begin(), vertsCGAL.end(), fc->vertex(1)->handle()) - vertsCGAL.begin()];
+		vh[2] = vertsOM[std::find(vertsCGAL.begin(), vertsCGAL.end(), fc->vertex(2)->handle()) - vertsCGAL.begin()];
+		fp[0] = glm::vec2(mesh->point(vh[0]).data()[0], mesh->point(vh[0]).data()[1]);
+		fp[1] = glm::vec2(mesh->point(vh[1]).data()[0], mesh->point(vh[1]).data()[1]);
+		fp[2] = glm::vec2(mesh->point(vh[2]).data()[0], mesh->point(vh[2]).data()[1]);
+		if (PointInContour((fp[0] + fp[1] + fp[2]) / 3.0f, contour)) {
+			mesh->add_face(vh, 3);
+		}
+	}
+	mesh->update_normals();
+
+	printf("CreateFace OK\n");
+	printf("v:%d, f:%d", mesh->n_vertices(), mesh->n_faces());
+	return mesh;
+}
+
 int Triangulation::PointInContour(glm::dvec2 point, std::deque<glm::vec2> contour)
 {
 	//int intersectCount = 0;
