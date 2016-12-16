@@ -240,44 +240,44 @@ void ModelPart::CreateMesh()
 	printf("CreateMesh\n");
 	//mesh = MyMesh::CreateFace(points);
 	mesh = Triangulation::CreateFace(&points[0], points.size(), triAspect, triSize);
-	//OpenMesh::Vec3d avg(0, 0, 0);
-	//int bpc = 0;
-	//for (MyMesh::VertexIter v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it) {
-	//	if (mesh->is_boundary(v_it)) {
-	//		avg += mesh->point(v_it);
-	//		bpc++;
-	//	}
-	//}
-	//avg /= bpc;
-	//MyMesh::VertexHandle minvh(0);
-	//float mindis = FLT_MAX;
-	//for (MyMesh::VertexIter v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it) {
-	//	if ((mesh->point(v_it) - avg).norm() < mindis) {
-	//		minvh = v_it;
-	//		mindis = (mesh->point(v_it) - avg).norm();
-	//	}
-	//}
+	OpenMesh::Vec3d avg(0, 0, 0);
+	int bpc = 0;
+	for (MyMesh::VertexIter v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it) {
+		if (mesh->is_boundary(v_it)) {
+			avg += mesh->point(v_it);
+			bpc++;
+		}
+	}
+	avg /= bpc;
+	MyMesh::VertexHandle minvh(0);
+	float mindis = FLT_MAX;
+	for (MyMesh::VertexIter v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it) {
+		if ((mesh->point(v_it) - avg).norm() < mindis) {
+			minvh = v_it;
+			mindis = (mesh->point(v_it) - avg).norm();
+		}
+	}
 	mesh->Extrude(extrudeThickness, extrudeDivisions, extrudeOffset, swellSize, swellPower);
 	state = ModelState::STATE_MODEL;
 
-	OpenMesh::IO::Options opt(OpenMesh::IO::Options::VertexNormal | OpenMesh::IO::Options::VertexTexCoord | OpenMesh::IO::Options::FaceTexCoord);
-	OpenMesh::IO::read_mesh(*mesh, "ballH.obj", opt);
-	if (opt.check(OpenMesh::IO::Options::VertexNormal)) {
-		printf("VertexNormal\n");
-	}
-	if (opt.check(OpenMesh::IO::Options::VertexTexCoord)) {
-		printf("VertexTexCoord\n");
-	}
-	if (mesh->has_vertex_normals()) {
-		printf("has_vertex_normals\n");
-	}
-	if (mesh->has_vertex_texcoords2D()) {
-		printf("has_vertex_texcoords2D\n");
-	}
-	mesh->update_normals();
+	//OpenMesh::IO::Options opt(OpenMesh::IO::Options::VertexNormal | OpenMesh::IO::Options::VertexTexCoord | OpenMesh::IO::Options::FaceTexCoord);
+	//OpenMesh::IO::read_mesh(*mesh, "ball2.obj", opt);
+	//if (opt.check(OpenMesh::IO::Options::VertexNormal)) {
+	//	printf("VertexNormal\n");
+	//}
+	//if (opt.check(OpenMesh::IO::Options::VertexTexCoord)) {
+	//	printf("VertexTexCoord\n");
+	//}
+	//if (mesh->has_vertex_normals()) {
+	//	printf("has_vertex_normals\n");
+	//}
+	//if (mesh->has_vertex_texcoords2D()) {
+	//	printf("has_vertex_texcoords2D\n");
+	//}
+	//mesh->update_normals();
 
 	mesh->ResetUV();
-	mesh->ComputeUV();
+	mesh->ComputeUV(minvh);
 	//mesh->LaplacianSmooth();
 }
 

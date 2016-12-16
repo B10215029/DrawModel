@@ -14,6 +14,7 @@ struct MyTraits : public OpenMesh::DefaultTraits
 	HalfedgeAttributes(OpenMesh::Attributes::TexCoord2D);
 	typedef OpenMesh::Vec3d Point;
 	typedef OpenMesh::Vec3d Normal;
+	typedef OpenMesh::Vec2d  TexCoord2D;
 };
 
 class MyMesh : public OpenMesh::TriMesh_ArrayKernelT<MyTraits>
@@ -27,12 +28,14 @@ public:
 	void Extrude(float thickness, int divisions, float offsetZ = 0.0f, float swellSize = 0.0f, float swellPower = 1.0f);
 	void Smooth(int steps = 3);
 	void ResetUV();
-	void ComputeUV(VertexHandle vh = VertexHandle(200), OpenMesh::Vec2f centerUV = OpenMesh::Vec2f(0.5, 0.5));
+	void ComputeUV(VertexHandle vh = VertexHandle(0), OpenMesh::Vec2d centerUV = OpenMesh::Vec2d(0.5, 0.5));
 
 private:
 	static OpenMesh::EPropHandleT<double> edgeWeight;
 	static OpenMesh::VPropHandleT<double> oneRingArea;
-	static OpenMesh::VPropHandleT<bool> hasUV;
+	static OpenMesh::VPropHandleT<int> ringLevel;
+	static OpenMesh::VPropHandleT<int> parentCount;
+	static OpenMesh::VPropHandleT<OpenMesh::Vec2d> UVSum;
 
 	void UpdateEdgeWeight();
 	double MeshArea();

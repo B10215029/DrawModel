@@ -11,13 +11,17 @@
 
 OpenMesh::EPropHandleT<double> MyMesh::edgeWeight;
 OpenMesh::VPropHandleT<double> MyMesh::oneRingArea;
-OpenMesh::VPropHandleT<bool> MyMesh::hasUV;
+OpenMesh::VPropHandleT<int> MyMesh::ringLevel;
+OpenMesh::VPropHandleT<int> MyMesh::parentCount;
+OpenMesh::VPropHandleT<OpenMesh::Vec2d> MyMesh::UVSum;
 
 MyMesh::MyMesh()
 {
 	add_property(edgeWeight);
 	add_property(oneRingArea);
-	add_property(hasUV);
+	add_property(UVSum);
+	add_property(ringLevel);
+	add_property(parentCount);
 	hasExtraction = false;
 }
 
@@ -151,8 +155,12 @@ void MyMesh::LaplacianSmooth()
 
 void MyMesh::ResetUV()
 {
+	OpenMesh::Vec2d zero(0, 0);
 	for (VertexIter v_it = vertices_begin(); v_it != vertices_end(); ++v_it) {
-		property(hasUV, v_it) = false;
+		property(ringLevel, v_it) = -1;
+		property(parentCount, v_it) = 0;
+		property(UVSum, v_it) = zero;
+		set_texcoord2D(v_it, zero);
 	}
 }
 
@@ -162,7 +170,7 @@ glm::dvec3 MyMesh::PointToVec3(MyMesh::Point p) {
 	return glm::dvec3(d[0], d[1], d[2]);
 }
 
-void MyMesh::ComputeUV(VertexHandle vh, OpenMesh::Vec2f centerUV)
+void MyMesh::ComputeUV(VertexHandle vh, OpenMesh::Vec2d centerUV)
 {
 	glm::dvec3 p = PointToVec3(point(vh));
 	std::deque<VertexHandle> queue;
@@ -170,7 +178,7 @@ void MyMesh::ComputeUV(VertexHandle vh, OpenMesh::Vec2f centerUV)
 	glm::dvec3 xp = glm::normalize(glm::cross(glm::dvec3(0, 1, 0), np));
 	glm::dvec3 yp = glm::normalize(glm::cross(np, xp));
 	set_texcoord2D(vh, centerUV);
-	property(hasUV, vh) = true;
+	property(ringLevel, vh) = 0;
 	queue.push_back(vh);
 	int i = 0;
 	while (!queue.empty()) {
@@ -201,7 +209,7 @@ void MyMesh::ComputeUV(VertexHandle vh, OpenMesh::Vec2f centerUV)
 		//printf("rl: %lf, theta: %lf\n", glm::degrees(na), glm::degrees(theta));
 
 		for (VertexVertexIter vv_it = vv_begin(currentVh); vv_it != vv_end(currentVh); ++vv_it) {
-			if (property(hasUV, vv_it))
+			if (property(ringLevel, vv_it) != -1 && property(ringLevel, vv_it) < property(ringLevel, currentVh))
 				continue;
 			//glm::dvec3 p1 = PointToVec3(point(vv_it));
 			//glm::dvec3 p2 = PointToVec3(point(currentVh));
@@ -213,14 +221,17 @@ void MyMesh::ComputeUV(VertexHandle vh, OpenMesh::Vec2f centerUV)
 			glm::dvec2 uv(glm::dot(v, xr), glm::dot(v, yr));
 			uv = glm::normalize(uv) * glm::length(v);
 			uv = glm::rotate(uv, -theta);
-			OpenMesh::Vec2f texV = OpenMesh::Vec2f(uv.x, uv.y) + texcoord2D(currentVh);
-			set_texcoord2D(vv_it, texV);
-			property(hasUV, vv_it) = true;
-			queue.push_back(vv_it);
-			printf("ID: %03d, %03d, UV: %lf, %lf, %lf\n", currentVh.idx(), vv_it->idx(), (texV - OpenMesh::Vec2f(0.5, 0.5)).norm(), texV.data()[0], texV.data()[1]);
+			//OpenMesh::Vec2f texV = (texcoord2D(vv_it) * property(parentCount, vv_it) + OpenMesh::Vec2f(uv.x, uv.y) + texcoord2D(currentVh)) / (property(parentCount, vv_it) + 1);
+			property(UVSum, vv_it) += OpenMesh::Vec2f(uv.x, uv.y) + texcoord2D(currentVh);
+			property(parentCount, vv_it)++;
+			if (property(ringLevel, vv_it) == -1) {
+				queue.push_back(vv_it);
+				property(ringLevel, vv_it) = property(ringLevel, currentVh) + 1;
+			}
+			set_texcoord2D(vv_it, property(UVSum, vv_it) / property(parentCount, vv_it));
+			//printf("ID: %03d, %03d, UV: %lf, %lf, %lf, LEVEL: %d, %d\n", currentVh.idx(), vv_it->idx(), (texV - OpenMesh::Vec2f(0.5, 0.5)).norm(), texV.data()[0], texV.data()[1], property(ringLevel, vv_it), property(parentCount, vv_it));
 		}
 	}
-
 
 	//const double* d = normal(vh).data();
 	//glm::vec3 normal(d[0], d[1], d[2]);
