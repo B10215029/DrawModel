@@ -23,6 +23,8 @@ public:
 
 	static glm::vec4 strokeColor;
 	static float strokeSize;
+	static float strokeInterval;
+	static float contourInterval;
 	static float pointInterval;
 	static GLuint strokeTextureHandle;
 	static glm::mat4 modelMatrix;
@@ -97,5 +99,6 @@ private:
 	GLuint strokeFBOColorTexture;
 	glm::mat4 mvp;
 	std::vector<glm::vec3> points;
+	std::vector<glm::vec3> screenPoints;
 	std::queue<glm::vec3> pointQueue;
 };

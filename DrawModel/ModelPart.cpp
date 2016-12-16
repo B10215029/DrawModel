@@ -11,6 +11,8 @@ struct ModelPart::DrawStrokeProgram ModelPart::drawStroke = {};
 struct ModelPart::DrawSolidProgram ModelPart::drawSolid = {};
 glm::vec4 ModelPart::strokeColor(0, 0, 1, 1);
 float ModelPart::strokeSize(50);
+float ModelPart::strokeInterval(0.005f);
+float ModelPart::contourInterval(0.05f);
 float ModelPart::pointInterval(0.005f);
 GLuint ModelPart::strokeTextureHandle;
 glm::mat4 ModelPart::modelMatrix;
@@ -340,21 +342,27 @@ void ModelPart::AddPoint(float x, float y, float z)
 
 void ModelPart::AddPoint(glm::vec3 point)
 {
-	
+	glm::vec4 screenPoint = mvp * glm::vec4(point, 1);
+	screenPoint /= screenPoint.w;
 	if (points.empty()) {
 		pointQueue.push(point);
 		points.push_back(point);
+		screenPoints.push_back(screenPoint);
 		//printf("add point%d: %f, %f, %f\n", points.size(), point.x, point.y, point.z);
 	}
 	else {
-		glm::vec3 vector = point - points.back();
-		float lineLength = glm::length(vector);
-		vector = glm::normalize(vector);
-		for (float i = pointInterval; i < lineLength; i += pointInterval) {
-			pointQueue.push(points.back() + vector * i);
-		}
-		if (lineLength > pointInterval) {
+		float screenLength = glm::length(glm::vec3(screenPoint) - screenPoints.back());
+		if (screenLength > contourInterval) {
+			glm::vec3 vector = point - points.back();
+			float lineLength = glm::length(vector);
+			float interval = lineLength / (int)(screenLength / contourInterval);
+			vector = glm::normalize(vector) * interval;
+			for (int i = 1; i < (int)(screenLength / contourInterval); i ++) {
+				pointQueue.push(points.back() + vector);
+				points.push_back(points.back() + vector);
+			}
 			points.push_back(point);
+			screenPoints.push_back(screenPoint);
 			//printf("add point%d: %f, %f, %f\n", points.size(), point.x, point.y, point.z);
 		}
 	}
