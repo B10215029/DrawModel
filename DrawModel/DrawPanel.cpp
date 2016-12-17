@@ -14,6 +14,7 @@ DrawPanel::DrawPanel()
 	ModelPart::viewMatrix = glm::translate(glm::mat4(1.0f), transform);
 	ModelPart::projectionMatrix = glm::mat4(1.0f);
 	operateMode = OperateMode::PointMode;
+	selectPart = -1;
 }
 
 DrawPanel::~DrawPanel()
@@ -49,6 +50,8 @@ void DrawPanel::Display()
 	for (int i = 0; i < parts.size(); i++) {
 		parts[i]->Render();
 	}
+	if (selectPart != -1)
+		parts[selectPart]->RenderLine();
 }
 
 void DrawPanel::MouseDown(int x, int y, int button)
@@ -58,16 +61,24 @@ void DrawPanel::MouseDown(int x, int y, int button)
 			glm::vec3 screenPos(x, height - y, 0);
 			BindGL();
 			glReadBuffer(GL_FRONT);
-			glReadPixels(screenPos.x, screenPos.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &zDraw);
-			if (zDraw == 1) {
-				glm::vec4 p = ModelPart::projectionMatrix * ModelPart::viewMatrix * ModelPart::modelMatrix * glm::vec4(0, 0, 0, 1);
-				zDraw = (p.z / p.w + 1) / 2;
-			}
+			glReadPixels(screenPos.x, screenPos.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &screenPos.z);
 			ReleaseGL();
-			screenPos.z = zDraw;
-			glm::vec3 worldPos = glm::unProject(screenPos, ModelPart::viewMatrix * ModelPart::modelMatrix, ModelPart::projectionMatrix, glm::vec4(0, 0, width, height));
-			printf("screenPos.z: %f, %f, %f\n", screenPos.x, screenPos.y, screenPos.z);
-			printf("worldPos.z: %f, %f, %f\n", worldPos.x, worldPos.y, worldPos.z);
+			if (screenPos.z == 1) {
+				selectPart = -1;
+			}
+			else {
+				glm::vec3 worldPos = glm::unProject(screenPos, ModelPart::viewMatrix * ModelPart::modelMatrix, ModelPart::projectionMatrix, glm::vec4(0, 0, width, height));
+				int nearestPart = -1;
+				float nearestDistance = FLT_MAX;
+				for (int i = 0; i < parts.size(); i++) {
+					float partDistance = parts[i]->meshPointDistance(worldPos);
+					if (partDistance < nearestDistance) {
+						nearestPart = i;
+						nearestDistance = partDistance;
+					}
+				}
+				selectPart = nearestPart;
+			}
 		}
 		else if (operateMode == OperateMode::CreateMode) {
 			parts.push_back(new ModelPart());
@@ -119,6 +130,7 @@ void DrawPanel::MouseUp(int x, int y, int button)
 				parts.back()->CreateMesh();
 				parts.back()->UpdateMeshBuffer();
 				ReleaseGL();
+				selectPart = parts.size() - 1;
 			}
 		}
 		else if (operateMode == OperateMode::DrawMode) {

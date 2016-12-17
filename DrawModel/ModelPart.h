@@ -55,6 +55,8 @@ public:
 	void UpdateMeshBuffer();
 	void ExtractionMesh(float s);
 	void SmoothMesh(int step);
+	bool isPointOnMesh(glm::vec3 point);
+	float meshPointDistance(glm::vec3 point);
 
 private:
 	static struct DrawTextureProgram {

@@ -146,24 +146,45 @@ void ModelPart::RenderStroke()
 
 void ModelPart::RenderLine()
 {
-	glLineWidth(3);
-	glBindVertexArray(0);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	//glClear(GL_DEPTH_BUFFER_BIT);
-	//glUseProgram(drawColor.program);
-	//glUniform4fv(drawColor.colorLocation, 1, glm::value_ptr(glm::vec4(1, 0, 0, 1)));
+	//glBindVertexArray(0);
+	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	////glClear(GL_DEPTH_BUFFER_BIT);
+	////glUseProgram(drawColor.program);
+	////glUniform4fv(drawColor.colorLocation, 1, glm::value_ptr(glm::vec4(1, 0, 0, 1)));
+	////glEnableVertexAttribArray(0);
+	////glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, &points[0]);
+	////glDrawArrays(GL_LINE_STRIP, 0, points.size());
+
+	//glUseProgram(drawSolid.program);
+	//glUniformMatrix4fv(drawSolid.modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+	//glUniformMatrix4fv(drawSolid.viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+	//glUniformMatrix4fv(drawSolid.projectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+	//glUniform4fv(drawSolid.colorLocation, 1, glm::value_ptr(strokeColor));
 	//glEnableVertexAttribArray(0);
 	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, &points[0]);
 	//glDrawArrays(GL_LINE_STRIP, 0, points.size());
 
+
+	if (!mesh) {
+		return;
+	}
+	glLineWidth(3);
+	glBindVertexArray(vao);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glUseProgram(drawSolid.program);
 	glUniformMatrix4fv(drawSolid.modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
 	glUniformMatrix4fv(drawSolid.viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
 	glUniformMatrix4fv(drawSolid.projectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-	glUniform4fv(drawSolid.colorLocation, 1, glm::value_ptr(strokeColor));
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, &points[0]);
-	glDrawArrays(GL_LINE_STRIP, 0, points.size());
+	glUniform1i(drawSolid.useTextureLocation, 0);
+	glBindVertexArray(vao);
+	glUniform4fv(drawSolid.colorLocation, 1, glm::value_ptr(glm::vec4(0.2, 1.0, 0.2, 1.0)));
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glEnable(GL_POLYGON_OFFSET_LINE);
+	glPolygonOffset(-0.5, -0.5);
+	glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void ModelPart::RenderPoint()
@@ -231,26 +252,26 @@ void ModelPart::RenderModel()
 	glUniform4fv(drawSolid.colorLocation, 1, glm::value_ptr(glm::vec4(0.5, 0.5, 0.5, 1.0)));
 	glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
 	glUniform1i(drawSolid.useTextureLocation, 0);
-	if (modelRenderLine) {
-		glUniform4fv(drawSolid.colorLocation, 1, glm::value_ptr(glm::vec4(0.2, 0.2, 0.2, 1.0)));
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glEnable(GL_POLYGON_OFFSET_LINE);
-		glPolygonOffset(-0.5, -0.5);
-		glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	}
-	if (modelRenderPoint) {
-		glDisable(GL_CULL_FACE);
-		glPointSize(5);
-		glUniform4fv(drawSolid.colorLocation, 1, glm::value_ptr(glm::vec4(0, 1, 0, 1.0)));
-		//glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-		glEnable(GL_POLYGON_OFFSET_POINT);
-		glPolygonOffset(-0.6, -0.6);
-		glDrawArrays(GL_POINTS, 0, vertexCount);
-		//glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
-		glEnable(GL_CULL_FACE);
-		//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	}
+	//if (modelRenderLine) {
+	//	glUniform4fv(drawSolid.colorLocation, 1, glm::value_ptr(glm::vec4(0.2, 0.2, 0.2, 1.0)));
+	//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//	glEnable(GL_POLYGON_OFFSET_LINE);
+	//	glPolygonOffset(-0.5, -0.5);
+	//	glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
+	//	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	//}
+	//if (modelRenderPoint) {
+	//	glDisable(GL_CULL_FACE);
+	//	glPointSize(5);
+	//	glUniform4fv(drawSolid.colorLocation, 1, glm::value_ptr(glm::vec4(0, 1, 0, 1.0)));
+	//	//glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+	//	glEnable(GL_POLYGON_OFFSET_POINT);
+	//	glPolygonOffset(-0.6, -0.6);
+	//	glDrawArrays(GL_POINTS, 0, vertexCount);
+	//	//glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
+	//	glEnable(GL_CULL_FACE);
+	//	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	//}
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -460,4 +481,23 @@ void ModelPart::UpdateMeshBuffer()
 
 
 	glBindVertexArray(0);
+}
+
+bool ModelPart::isPointOnMesh(glm::vec3 point)
+{
+	return false;
+}
+
+float ModelPart::meshPointDistance(glm::vec3 point)
+{
+	float minDistance = FLT_MAX;
+	MyMesh::Point p(point.x, point.y, point.z);
+	if (!mesh)
+		return minDistance;
+	for (MyMesh::VertexIter v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it) {
+		float pointDistance = (mesh->point(v_it.handle()) - p).norm();
+		if (pointDistance < minDistance)
+			minDistance = pointDistance;
+	}
+	return minDistance;
 }

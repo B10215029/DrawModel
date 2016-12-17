@@ -219,9 +219,9 @@ private: System::Windows::Forms::Button^  button10;
 			this->button7 = (gcnew System::Windows::Forms::Button());
 			this->button8 = (gcnew System::Windows::Forms::Button());
 			this->button9 = (gcnew System::Windows::Forms::Button());
+			this->button10 = (gcnew System::Windows::Forms::Button());
 			this->colorDialog1 = (gcnew System::Windows::Forms::ColorDialog());
 			this->openFileDialog1 = (gcnew System::Windows::Forms::OpenFileDialog());
-			this->button10 = (gcnew System::Windows::Forms::Button());
 			this->tableLayoutPanel1->SuspendLayout();
 			this->tableLayoutPanel2->SuspendLayout();
 			this->groupBox1->SuspendLayout();
@@ -336,6 +336,7 @@ private: System::Windows::Forms::Button^  button10;
 			this->listBox1->Name = L"listBox1";
 			this->listBox1->Size = System::Drawing::Size(129, 75);
 			this->listBox1->TabIndex = 1;
+			this->listBox1->SelectedIndexChanged += gcnew System::EventHandler(this, &MainForm::listBox1_SelectedIndexChanged);
 			// 
 			// button2
 			// 
@@ -972,10 +973,6 @@ private: System::Windows::Forms::Button^  button10;
 			this->button9->UseVisualStyleBackColor = true;
 			this->button9->Click += gcnew System::EventHandler(this, &MainForm::button9_Click);
 			// 
-			// openFileDialog1
-			// 
-			this->openFileDialog1->FileName = L"openFileDialog1";
-			// 
 			// button10
 			// 
 			this->button10->Dock = System::Windows::Forms::DockStyle::Fill;
@@ -987,6 +984,10 @@ private: System::Windows::Forms::Button^  button10;
 			this->button10->UseVisualStyleBackColor = true;
 			this->button10->Click += gcnew System::EventHandler(this, &MainForm::button10_Click);
 			// 
+			// openFileDialog1
+			// 
+			this->openFileDialog1->FileName = L"openFileDialog1";
+			// 
 			// MainForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 12);
@@ -995,7 +996,6 @@ private: System::Windows::Forms::Button^  button10;
 			this->Controls->Add(this->tableLayoutPanel1);
 			this->Name = L"MainForm";
 			this->Text = L"Draw Model";
-			this->KeyDown += gcnew System::Windows::Forms::KeyEventHandler(this, &MainForm::MainForm_KeyDown);
 			this->tableLayoutPanel1->ResumeLayout(false);
 			this->tableLayoutPanel2->ResumeLayout(false);
 			this->groupBox1->ResumeLayout(false);
@@ -1022,18 +1022,34 @@ private: System::Windows::Forms::Button^  button10;
 
 		}
 #pragma endregion
-	private: System::Void MainForm_KeyDown(System::Object^  sender, System::Windows::Forms::KeyEventArgs^  e) {
-		if (e->KeyCode == Keys::Space) {
-			drawPanel->cleanStroke = true;
+protected: virtual bool ProcessCmdKey(System::Windows::Forms::Message% msg, System::Windows::Forms::Keys keyData) override {
+	if (keyData == Keys::D1) {
+		button7_Click(gcnew System::Object, gcnew System::EventArgs);
+	}
+	if (keyData == Keys::D2) {
+		button8_Click(gcnew System::Object, gcnew System::EventArgs);
+	}
+	if (keyData == Keys::D3) {
+		button9_Click(gcnew System::Object, gcnew System::EventArgs);
+	}
+	if (keyData == Keys::D4) {
+		button10_Click(gcnew System::Object, gcnew System::EventArgs);
+	}
+	if (keyData == Keys::D5) {
+
+	}
+	if (keyData == Keys::D6) {
+
+	}
+	return Form::ProcessCmdKey(msg, keyData);
+}
+private: System::Void panel1_MouseDown(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
+	if (drawPanel->operateMode == DrawPanel::OperateMode::CreateMode) {
+		if (e->Button == System::Windows::Forms::MouseButtons::Left) {
+			listBox1->Items->Add(String::Format("New Item {0}", listBox1->Items->Count));
 		}
 	}
-	private: System::Void panel1_MouseDown(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
-		if (drawPanel->operateMode == DrawPanel::OperateMode::CreateMode) {
-			if (e->Button == System::Windows::Forms::MouseButtons::Left) {
-				listBox1->Items->Add(String::Format("New Item {0}", listBox1->Items->Count));
-			}
-		}
-	}
+}
 private: System::Void label1_Click(System::Object^  sender, System::EventArgs^  e) {
 	if (colorDialog1->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
 		label1->BackColor = colorDialog1->Color;
@@ -1126,11 +1142,12 @@ private: System::Void button4_Click(System::Object^  sender, System::EventArgs^ 
 	}
 }
 private: System::Void panel1_MouseUp(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
-	if (drawPanel->operateMode == DrawPanel::OperateMode::CreateMode) {
-		if (e->Button == System::Windows::Forms::MouseButtons::Left) {
-			listBox1->SelectedIndex = listBox1->Items->Count - 1;
-		}
-	}
+	listBox1->SelectedIndex = drawPanel->selectPart;
+	//if (drawPanel->operateMode == DrawPanel::OperateMode::CreateMode) {
+	//	if (e->Button == System::Windows::Forms::MouseButtons::Left) {
+	//		listBox1->SelectedIndex = listBox1->Items->Count - 1;
+	//	}
+	//}
 }
 private: System::Void button5_Click(System::Object^  sender, System::EventArgs^  e) {
 	drawPanel->ExportOBJ("Mesh.obj");
@@ -1191,6 +1208,9 @@ private: System::Void button10_Click(System::Object^  sender, System::EventArgs^
 	button10->BackColor = System::Drawing::SystemColors::Control;
 	button10->BackColor = System::Drawing::Color::Yellow;
 	drawPanel->operateMode = DrawPanel::OperateMode::DeformationMode;
+}
+private: System::Void listBox1_SelectedIndexChanged(System::Object^  sender, System::EventArgs^  e) {
+	drawPanel->selectPart = listBox1->SelectedIndex;
 }
 };
 }

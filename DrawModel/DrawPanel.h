@@ -51,6 +51,7 @@ public:
 	glm::vec3 transform;
 	glm::vec3 rotation;
 	OperateMode operateMode;
+	int selectPart;
 
 private:
 	glm::ivec2 previousMousePosition;
