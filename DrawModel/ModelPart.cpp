@@ -205,6 +205,16 @@ void ModelPart::RenderContour()
 	glBindVertexArray(0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+	glPointSize(5);
+	glUseProgram(drawColor.program);
+	glUniformMatrix4fv(drawColor.modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+	glUniformMatrix4fv(drawColor.viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+	glUniformMatrix4fv(drawColor.projectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+	glUniform4fv(drawColor.colorLocation, 1, glm::value_ptr(glm::vec4(0, 1, 0, 1)));
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, &points[0]);
+	glDrawArrays(GL_POINTS, 0, points.size());
+
 	glLineWidth(3);
 	glUseProgram(drawColor.program);
 	glUniformMatrix4fv(drawColor.modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
@@ -214,17 +224,6 @@ void ModelPart::RenderContour()
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, &points[0]);
 	glDrawArrays(GL_LINE_STRIP, 0, points.size());
-
-	glPointSize(5);
-	glClear(GL_DEPTH_BUFFER_BIT);
-	glUseProgram(drawColor.program);
-	glUniformMatrix4fv(drawColor.modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
-	glUniformMatrix4fv(drawColor.viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
-	glUniformMatrix4fv(drawColor.projectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-	glUniform4fv(drawColor.colorLocation, 1, glm::value_ptr(glm::vec4(0, 1, 0, 1)));
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, &points[0]);
-	glDrawArrays(GL_POINTS, 0, points.size());
 }
 
 void ModelPart::RenderUV()
@@ -296,7 +295,7 @@ void ModelPart::CreateFrameBuffer(int width, int height)
 
 void ModelPart::CreateMesh()
 {
-	if (points.empty())
+	if (!isComputableContour(screenPoints))
 		return;
 	printf("CreateMesh\n");
 	//mesh = MyMesh::CreateFace(points);
@@ -533,4 +532,30 @@ void ModelPart::readUVEdge(std::vector<glm::vec3> &uvVector)
 		uvVector.push_back(glm::vec3(uv1.data()[0], uv1.data()[1], 0));
 		uvVector.push_back(glm::vec3(uv2.data()[0], uv2.data()[1], 0));
 	}
+}
+
+bool ModelPart::isComputableContour(std::vector<glm::vec3> contourPoints)
+{
+	// reference https://www.ptt.cc/bbs/MATLAB/M.1297675543.A.40E.html
+	if (contourPoints.size() < 3)
+		return false;
+	for (int ai = 0, aj = contourPoints.size() - 1; ai < contourPoints.size(); aj = ai++) {
+		double p1 = contourPoints[aj].y - contourPoints[ai].y;
+		double p2 = contourPoints[ai].x - contourPoints[aj].x;
+		double p3 = contourPoints[aj].x*contourPoints[ai].y - contourPoints[ai].x*contourPoints[aj].y;
+		for (int bi = ai + 2, bj = ai + 1; bi < contourPoints.size(); bj = bi++) {
+			if (bi == aj || bj == ai)
+				continue;
+			double q1 = contourPoints[bj].y - contourPoints[bi].y;
+			double q2 = contourPoints[bi].x - contourPoints[bj].x;
+			double q3 = contourPoints[bj].x*contourPoints[bi].y - contourPoints[bi].x*contourPoints[bj].y;
+
+			bool sign1 = ((p1*contourPoints[bi].x + p2*contourPoints[bi].y + p3) < 0) ^ ((p1*contourPoints[bj].x + p2*contourPoints[bj].y + p3) < 0);
+			bool sign2 = ((q1*contourPoints[ai].x + q2*contourPoints[ai].y + q3) < 0) ^ ((q1*contourPoints[aj].x + q2*contourPoints[aj].y + q3) < 0);
+
+			if (sign1 && sign2)
+				return false;
+		}
+	}
+	return true;
 }

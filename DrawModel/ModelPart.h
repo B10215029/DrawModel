@@ -61,6 +61,8 @@ public:
 	void readUVEdge(std::vector<glm::vec3> &uvVector);
 
 private:
+	static bool isComputableContour(std::vector<glm::vec3> contourPoints);
+
 	static struct DrawTextureProgram {
 		GLuint program;
 		GLuint textureLocation;

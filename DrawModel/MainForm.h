@@ -227,9 +227,9 @@ private: System::Windows::Forms::Button^  button13;
 			this->button10 = (gcnew System::Windows::Forms::Button());
 			this->button11 = (gcnew System::Windows::Forms::Button());
 			this->button12 = (gcnew System::Windows::Forms::Button());
+			this->button13 = (gcnew System::Windows::Forms::Button());
 			this->colorDialog1 = (gcnew System::Windows::Forms::ColorDialog());
 			this->openFileDialog1 = (gcnew System::Windows::Forms::OpenFileDialog());
-			this->button13 = (gcnew System::Windows::Forms::Button());
 			this->tableLayoutPanel1->SuspendLayout();
 			this->tableLayoutPanel2->SuspendLayout();
 			this->groupBox1->SuspendLayout();
@@ -1017,10 +1017,6 @@ private: System::Windows::Forms::Button^  button13;
 			this->button12->UseVisualStyleBackColor = true;
 			this->button12->Click += gcnew System::EventHandler(this, &MainForm::button12_Click);
 			// 
-			// openFileDialog1
-			// 
-			this->openFileDialog1->FileName = L"openFileDialog1";
-			// 
 			// button13
 			// 
 			this->button13->Dock = System::Windows::Forms::DockStyle::Fill;
@@ -1031,6 +1027,10 @@ private: System::Windows::Forms::Button^  button13;
 			this->button13->Text = L"¸ü¤J";
 			this->button13->UseVisualStyleBackColor = true;
 			this->button13->Click += gcnew System::EventHandler(this, &MainForm::button13_Click);
+			// 
+			// openFileDialog1
+			// 
+			this->openFileDialog1->FileName = L"openFileDialog1";
 			// 
 			// MainForm
 			// 
