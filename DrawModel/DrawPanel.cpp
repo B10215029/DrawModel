@@ -106,6 +106,7 @@ void DrawPanel::MouseDown(int x, int y, int button)
 			//printf("worldPos.z: %f, %f, %f\n", worldPos.x, worldPos.y, worldPos.z);
 
 			//printf("transform.z: %f\n", transform.z);
+			selectPart = parts.size() - 1;
 		}
 		else if (operateMode == OperateMode::DrawMode) {
 
@@ -130,7 +131,6 @@ void DrawPanel::MouseUp(int x, int y, int button)
 				parts.back()->CreateMesh();
 				parts.back()->UpdateMeshBuffer();
 				ReleaseGL();
-				selectPart = parts.size() - 1;
 			}
 		}
 		else if (operateMode == OperateMode::DrawMode) {

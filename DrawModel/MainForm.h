@@ -1143,11 +1143,6 @@ private: System::Void button4_Click(System::Object^  sender, System::EventArgs^ 
 }
 private: System::Void panel1_MouseUp(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
 	listBox1->SelectedIndex = drawPanel->selectPart;
-	//if (drawPanel->operateMode == DrawPanel::OperateMode::CreateMode) {
-	//	if (e->Button == System::Windows::Forms::MouseButtons::Left) {
-	//		listBox1->SelectedIndex = listBox1->Items->Count - 1;
-	//	}
-	//}
 }
 private: System::Void button5_Click(System::Object^  sender, System::EventArgs^  e) {
 	drawPanel->ExportOBJ("Mesh.obj");
