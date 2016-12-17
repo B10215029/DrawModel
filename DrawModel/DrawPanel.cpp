@@ -298,3 +298,13 @@ void DrawPanel::ExportOBJ(const char* fileName)
 {
 	ModelPart::SavePartsToOBJ(parts, fileName);
 }
+
+void DrawPanel::LoadModel(const char* fileName)
+{
+	parts.push_back(new ModelPart());
+	parts.back()->ReadMesh(fileName);
+	BindGL();
+	parts.back()->UpdateMeshBuffer();
+	ReleaseGL();
+	selectPart = parts.size() - 1;
+}

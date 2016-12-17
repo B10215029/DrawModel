@@ -155,6 +155,7 @@ private: System::Windows::Forms::Button^  button11;
 		/// </summary>
 		DrawPanel *drawPanel;
 private: System::Windows::Forms::Button^  button12;
+private: System::Windows::Forms::Button^  button13;
 		 UVForm uvForm;
 
 
@@ -225,9 +226,10 @@ private: System::Windows::Forms::Button^  button12;
 			this->button9 = (gcnew System::Windows::Forms::Button());
 			this->button10 = (gcnew System::Windows::Forms::Button());
 			this->button11 = (gcnew System::Windows::Forms::Button());
+			this->button12 = (gcnew System::Windows::Forms::Button());
 			this->colorDialog1 = (gcnew System::Windows::Forms::ColorDialog());
 			this->openFileDialog1 = (gcnew System::Windows::Forms::OpenFileDialog());
-			this->button12 = (gcnew System::Windows::Forms::Button());
+			this->button13 = (gcnew System::Windows::Forms::Button());
 			this->tableLayoutPanel1->SuspendLayout();
 			this->tableLayoutPanel2->SuspendLayout();
 			this->groupBox1->SuspendLayout();
@@ -919,6 +921,7 @@ private: System::Windows::Forms::Button^  button12;
 			this->tableLayoutPanel10->Controls->Add(this->button10, 0, 3);
 			this->tableLayoutPanel10->Controls->Add(this->button11, 0, 4);
 			this->tableLayoutPanel10->Controls->Add(this->button12, 0, 5);
+			this->tableLayoutPanel10->Controls->Add(this->button13, 0, 7);
 			this->tableLayoutPanel10->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->tableLayoutPanel10->Location = System::Drawing::Point(3, 3);
 			this->tableLayoutPanel10->Name = L"tableLayoutPanel10";
@@ -1003,10 +1006,6 @@ private: System::Windows::Forms::Button^  button12;
 			this->button11->UseVisualStyleBackColor = true;
 			this->button11->Click += gcnew System::EventHandler(this, &MainForm::button11_Click);
 			// 
-			// openFileDialog1
-			// 
-			this->openFileDialog1->FileName = L"openFileDialog1";
-			// 
 			// button12
 			// 
 			this->button12->Dock = System::Windows::Forms::DockStyle::Fill;
@@ -1017,6 +1016,21 @@ private: System::Windows::Forms::Button^  button12;
 			this->button12->Text = L"½ü¹ø";
 			this->button12->UseVisualStyleBackColor = true;
 			this->button12->Click += gcnew System::EventHandler(this, &MainForm::button12_Click);
+			// 
+			// openFileDialog1
+			// 
+			this->openFileDialog1->FileName = L"openFileDialog1";
+			// 
+			// button13
+			// 
+			this->button13->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->button13->Location = System::Drawing::Point(3, 283);
+			this->button13->Name = L"button13";
+			this->button13->Size = System::Drawing::Size(38, 34);
+			this->button13->TabIndex = 6;
+			this->button13->Text = L"¸ü¤J";
+			this->button13->UseVisualStyleBackColor = true;
+			this->button13->Click += gcnew System::EventHandler(this, &MainForm::button13_Click);
 			// 
 			// MainForm
 			// 
@@ -1245,6 +1259,13 @@ private: System::Void button11_Click(System::Object^  sender, System::EventArgs^
 	uvForm.Show();
 }
 private: System::Void button12_Click(System::Object^  sender, System::EventArgs^  e) {
+}
+private: System::Void button13_Click(System::Object^  sender, System::EventArgs^  e) {
+	if (openFileDialog1->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
+		drawPanel->LoadModel((const char*)(System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(openFileDialog1->FileName)).ToPointer());
+		listBox1->Items->Add(String::Format("New Item {0}", listBox1->Items->Count));
+		listBox1->SelectedIndex = drawPanel->selectPart;
+	}
 }
 };
 }

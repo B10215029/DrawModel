@@ -46,6 +46,7 @@ public:
 	void SmoothPart(int id, int step);
 	void SetView(ViewDirection viewDirection);
 	void ExportOBJ(const char* fileName);
+	void LoadModel(const char* fileName);
 
 	bool cleanStroke;
 	glm::vec3 transform;

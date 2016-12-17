@@ -296,6 +296,8 @@ void ModelPart::CreateFrameBuffer(int width, int height)
 
 void ModelPart::CreateMesh()
 {
+	if (points.empty())
+		return;
 	printf("CreateMesh\n");
 	//mesh = MyMesh::CreateFace(points);
 	//mesh = Triangulation::CreateFace(&points[0], points.size(), triAspect, triSize);
@@ -339,6 +341,23 @@ void ModelPart::CreateMesh()
 	mesh->ResetUV();
 	mesh->ComputeUV(minvh);
 	//mesh->LaplacianSmooth();
+}
+
+void ModelPart::ReadMesh(const char* fileName)
+{
+	state = ModelState::STATE_MODEL;
+	mesh = new MyMesh();
+	OpenMesh::IO::Options opt(OpenMesh::IO::Options::VertexNormal | OpenMesh::IO::Options::VertexTexCoord | OpenMesh::IO::Options::FaceTexCoord);
+	OpenMesh::IO::read_mesh(*mesh, fileName, opt);
+	if (!opt.check(OpenMesh::IO::Options::VertexNormal) && mesh->has_vertex_normals()) {
+		printf("No VertexNormal, recompute\n");
+		mesh->update_normals();
+	}
+	if (!opt.check(OpenMesh::IO::Options::VertexTexCoord) && mesh->has_vertex_texcoords2D()) {
+		printf("No VertexTexCoord, recompute\n");
+		mesh->ResetUV();
+		mesh->ComputeUV();
+	}
 }
 
 void ModelPart::ExtractionMesh(float s)

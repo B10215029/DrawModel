@@ -52,6 +52,7 @@ public:
 	void AddPoint(glm::vec3 point);
 	void CreateFrameBuffer(int width, int height);
 	void CreateMesh();
+	void ReadMesh(const char* fileName);
 	void UpdateMeshBuffer();
 	void ExtractionMesh(float s);
 	void SmoothMesh(int step);
