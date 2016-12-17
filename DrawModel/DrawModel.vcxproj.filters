@@ -40,6 +40,12 @@
     <ClCompile Include="ModelPart.cpp">
       <Filter>原始程式檔</Filter>
     </ClCompile>
+    <ClCompile Include="UVForm.cpp">
+      <Filter>原始程式檔</Filter>
+    </ClCompile>
+    <ClCompile Include="UVPanel.cpp">
+      <Filter>原始程式檔</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="OpenGLEventTrigger.h">
@@ -61,6 +67,12 @@
       <Filter>標頭檔</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
+    <ClInclude Include="UVForm.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
+    <ClInclude Include="UVPanel.h">
       <Filter>標頭檔</Filter>
     </ClInclude>
   </ItemGroup>

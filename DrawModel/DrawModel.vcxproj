@@ -138,6 +138,8 @@
     <ClCompile Include="OpenGLEventTrigger.cpp" />
     <ClCompile Include="OpenGLPanel.cpp" />
     <ClCompile Include="ShaderUtility.cpp" />
+    <ClCompile Include="UVForm.cpp" />
+    <ClCompile Include="UVPanel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DrawPanel.h" />
@@ -149,6 +151,10 @@
     <ClInclude Include="OpenGLPanel.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="ShaderUtility.h" />
+    <ClInclude Include="UVForm.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="UVPanel.h" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -160,6 +166,9 @@
   <ItemGroup>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.h</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UVForm.resx">
+      <DependentUpon>UVForm.h</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

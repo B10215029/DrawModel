@@ -57,6 +57,7 @@ public:
 	void SmoothMesh(int step);
 	bool isPointOnMesh(glm::vec3 point);
 	float meshPointDistance(glm::vec3 point);
+	void readUVEdge(std::vector<glm::vec3> &uvVector);
 
 private:
 	static struct DrawTextureProgram {

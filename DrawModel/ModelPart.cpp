@@ -501,3 +501,17 @@ float ModelPart::meshPointDistance(glm::vec3 point)
 	}
 	return minDistance;
 }
+
+void ModelPart::readUVEdge(std::vector<glm::vec3> &uvVector)
+{
+	uvVector.clear();
+	if (!mesh)
+		return;
+	for (MyMesh::EdgeIter e_it = mesh->edges_begin(); e_it != mesh->edges_end(); ++e_it) {
+		MyMesh::HalfedgeHandle he = mesh->halfedge_handle(e_it, 0);
+		OpenMesh::Vec2d uv1 = mesh->texcoord2D(mesh->from_vertex_handle(he));
+		OpenMesh::Vec2d uv2 = mesh->texcoord2D(mesh->to_vertex_handle(he));
+		uvVector.push_back(glm::vec3(uv1.data()[0], uv1.data()[1], 0));
+		uvVector.push_back(glm::vec3(uv2.data()[0], uv2.data()[1], 0));
+	}
+}

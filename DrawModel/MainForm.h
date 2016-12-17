@@ -2,6 +2,7 @@
 #include "OpenGLEventTrigger.h"
 #include "DrawPanel.h"
 #include "ModelPart.h"
+#include "UVForm.h"
 
 namespace DrawModel {
 
@@ -145,6 +146,7 @@ private: System::Windows::Forms::Button^  button7;
 private: System::Windows::Forms::Button^  button8;
 private: System::Windows::Forms::Button^  button9;
 private: System::Windows::Forms::Button^  button10;
+private: System::Windows::Forms::Button^  button11;
 	protected:
 
 	private:
@@ -152,6 +154,8 @@ private: System::Windows::Forms::Button^  button10;
 		/// 設計工具所需的變數。
 		/// </summary>
 		DrawPanel *drawPanel;
+private: System::Windows::Forms::Button^  button12;
+		 UVForm uvForm;
 
 
 #pragma region Windows Form Designer generated code
@@ -220,8 +224,10 @@ private: System::Windows::Forms::Button^  button10;
 			this->button8 = (gcnew System::Windows::Forms::Button());
 			this->button9 = (gcnew System::Windows::Forms::Button());
 			this->button10 = (gcnew System::Windows::Forms::Button());
+			this->button11 = (gcnew System::Windows::Forms::Button());
 			this->colorDialog1 = (gcnew System::Windows::Forms::ColorDialog());
 			this->openFileDialog1 = (gcnew System::Windows::Forms::OpenFileDialog());
+			this->button12 = (gcnew System::Windows::Forms::Button());
 			this->tableLayoutPanel1->SuspendLayout();
 			this->tableLayoutPanel2->SuspendLayout();
 			this->groupBox1->SuspendLayout();
@@ -911,6 +917,8 @@ private: System::Windows::Forms::Button^  button10;
 			this->tableLayoutPanel10->Controls->Add(this->button8, 0, 1);
 			this->tableLayoutPanel10->Controls->Add(this->button9, 0, 2);
 			this->tableLayoutPanel10->Controls->Add(this->button10, 0, 3);
+			this->tableLayoutPanel10->Controls->Add(this->button11, 0, 4);
+			this->tableLayoutPanel10->Controls->Add(this->button12, 0, 5);
 			this->tableLayoutPanel10->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->tableLayoutPanel10->Location = System::Drawing::Point(3, 3);
 			this->tableLayoutPanel10->Name = L"tableLayoutPanel10";
@@ -984,9 +992,31 @@ private: System::Windows::Forms::Button^  button10;
 			this->button10->UseVisualStyleBackColor = true;
 			this->button10->Click += gcnew System::EventHandler(this, &MainForm::button10_Click);
 			// 
+			// button11
+			// 
+			this->button11->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->button11->Location = System::Drawing::Point(3, 163);
+			this->button11->Name = L"button11";
+			this->button11->Size = System::Drawing::Size(38, 34);
+			this->button11->TabIndex = 4;
+			this->button11->Text = L"UV";
+			this->button11->UseVisualStyleBackColor = true;
+			this->button11->Click += gcnew System::EventHandler(this, &MainForm::button11_Click);
+			// 
 			// openFileDialog1
 			// 
 			this->openFileDialog1->FileName = L"openFileDialog1";
+			// 
+			// button12
+			// 
+			this->button12->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->button12->Location = System::Drawing::Point(3, 203);
+			this->button12->Name = L"button12";
+			this->button12->Size = System::Drawing::Size(38, 34);
+			this->button12->TabIndex = 5;
+			this->button12->Text = L"輪廓";
+			this->button12->UseVisualStyleBackColor = true;
+			this->button12->Click += gcnew System::EventHandler(this, &MainForm::button12_Click);
 			// 
 			// MainForm
 			// 
@@ -1036,10 +1066,10 @@ protected: virtual bool ProcessCmdKey(System::Windows::Forms::Message% msg, Syst
 		button10_Click(gcnew System::Object, gcnew System::EventArgs);
 	}
 	if (keyData == Keys::D5) {
-
+		button11_Click(gcnew System::Object, gcnew System::EventArgs);
 	}
 	if (keyData == Keys::D6) {
-
+		button12_Click(gcnew System::Object, gcnew System::EventArgs);
 	}
 	return Form::ProcessCmdKey(msg, keyData);
 }
@@ -1206,6 +1236,15 @@ private: System::Void button10_Click(System::Object^  sender, System::EventArgs^
 }
 private: System::Void listBox1_SelectedIndexChanged(System::Object^  sender, System::EventArgs^  e) {
 	drawPanel->selectPart = listBox1->SelectedIndex;
+	if (drawPanel->selectPart != -1)
+		uvForm.SetModelPart(drawPanel->parts[drawPanel->selectPart]);
+	else
+		uvForm.SetModelPart(NULL);
+}
+private: System::Void button11_Click(System::Object^  sender, System::EventArgs^  e) {
+	uvForm.Show();
+}
+private: System::Void button12_Click(System::Object^  sender, System::EventArgs^  e) {
 }
 };
 }

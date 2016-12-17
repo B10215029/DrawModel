@@ -51,6 +51,7 @@ public:
 	glm::vec3 transform;
 	glm::vec3 rotation;
 	OperateMode operateMode;
+	std::deque<ModelPart*> parts;
 	int selectPart;
 
 private:
@@ -73,5 +74,4 @@ private:
 	GLuint strokeTextureHandle;
 	std::vector<glm::vec3> points;
 	std::vector<glm::vec3> pointQueue;
-	std::deque<ModelPart*> parts;
 };
