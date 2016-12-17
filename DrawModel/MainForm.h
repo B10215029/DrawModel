@@ -35,7 +35,7 @@ namespace DrawModel {
 			}
 			catch (...) {}
 			try {
-				ModelPart::pointInterval = float::Parse(textBox2->Text);
+				ModelPart::strokeInterval = float::Parse(textBox2->Text);
 			}
 			catch (...) {}
 			//this->label5->BackgroundImage = Image::FromFile("./stroke/stroke1.png");
@@ -1051,7 +1051,7 @@ private: System::Void textBox1_TextChanged(System::Object^  sender, System::Even
 }
 private: System::Void textBox2_TextChanged(System::Object^  sender, System::EventArgs^  e) {
 	try {
-		ModelPart::pointInterval = float::Parse(textBox2->Text);
+		ModelPart::strokeInterval = float::Parse(textBox2->Text);
 	}
 	catch (System::FormatException^ e) {
 

@@ -13,7 +13,6 @@ glm::vec4 ModelPart::strokeColor(0, 0, 1, 1);
 float ModelPart::strokeSize(50);
 float ModelPart::strokeInterval(0.005f);
 float ModelPart::contourInterval(0.05f);
-float ModelPart::pointInterval(0.005f);
 GLuint ModelPart::strokeTextureHandle;
 glm::mat4 ModelPart::modelMatrix;
 glm::mat4 ModelPart::viewMatrix;
@@ -348,22 +347,27 @@ void ModelPart::AddPoint(glm::vec3 point)
 		pointQueue.push(point);
 		points.push_back(point);
 		screenPoints.push_back(screenPoint);
-		//printf("add point%d: %f, %f, %f\n", points.size(), point.x, point.y, point.z);
 	}
 	else {
 		float screenLength = glm::length(glm::vec3(screenPoint) - screenPoints.back());
 		if (screenLength > contourInterval) {
 			glm::vec3 vector = point - points.back();
 			float lineLength = glm::length(vector);
+			// add interpolation point
 			float interval = lineLength / (int)(screenLength / contourInterval);
 			vector = glm::normalize(vector) * interval;
 			for (int i = 1; i < (int)(screenLength / contourInterval); i ++) {
-				pointQueue.push(points.back() + vector);
 				points.push_back(points.back() + vector);
 			}
+			// add point
 			points.push_back(point);
 			screenPoints.push_back(screenPoint);
-			//printf("add point%d: %f, %f, %f\n", points.size(), point.x, point.y, point.z);
+			// add interpolation stroke
+			interval = lineLength / (int)(screenLength / strokeInterval);
+			vector = glm::normalize(vector) * -interval;
+			for (int i = 0; i < (int)(screenLength / strokeInterval); i ++) {
+				pointQueue.push(points.back() + vector * float(i));
+			}
 		}
 	}
 }

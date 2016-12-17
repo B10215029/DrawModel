@@ -25,7 +25,6 @@ public:
 	static float strokeSize;
 	static float strokeInterval;
 	static float contourInterval;
-	static float pointInterval;
 	static GLuint strokeTextureHandle;
 	static glm::mat4 modelMatrix;
 	static glm::mat4 viewMatrix;
