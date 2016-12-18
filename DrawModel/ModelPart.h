@@ -59,6 +59,7 @@ public:
 	bool isPointOnMesh(glm::vec3 point);
 	float meshPointDistance(glm::vec3 point);
 	void readUVEdge(std::vector<glm::vec3> &uvVector);
+	void readContourScreenPoint(std::vector<glm::vec3> &pointVector);
 
 private:
 	static bool isComputableContour(std::vector<glm::vec3> contourPoints);

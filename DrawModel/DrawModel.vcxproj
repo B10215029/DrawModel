@@ -131,6 +131,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ContourForm.cpp" />
+    <ClCompile Include="ContourPanel.cpp" />
     <ClCompile Include="DrawPanel.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainForm.cpp" />
@@ -142,6 +144,10 @@
     <ClCompile Include="UVPanel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ContourForm.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="ContourPanel.h" />
     <ClInclude Include="DrawPanel.h" />
     <ClInclude Include="MainForm.h">
       <FileType>CppForm</FileType>
@@ -164,6 +170,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="ContourForm.resx">
+      <DependentUpon>ContourForm.h</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.h</DependentUpon>
     </EmbeddedResource>

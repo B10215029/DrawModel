@@ -70,6 +70,8 @@ void ModelPart::SavePartsToOBJ(std::deque<ModelPart*> parts, const char* fileNam
 	std::deque<MyMesh::VertexHandle> verts;
 	MyMesh::VertexHandle vh[3];
 	for (int i = 0; i < parts.size(); i++) {
+		if (!parts[i]->mesh)
+			continue;
 		verts.clear();
 		for (MyMesh::VertexIter v_it = parts[i]->mesh->vertices_begin(); v_it != parts[i]->mesh->vertices_end(); ++v_it) {
 			verts.push_back(mesh.add_vertex(parts[i]->mesh->point(v_it)));
@@ -532,6 +534,11 @@ void ModelPart::readUVEdge(std::vector<glm::vec3> &uvVector)
 		uvVector.push_back(glm::vec3(uv1.data()[0], uv1.data()[1], 0));
 		uvVector.push_back(glm::vec3(uv2.data()[0], uv2.data()[1], 0));
 	}
+}
+
+void ModelPart::readContourScreenPoint(std::vector<glm::vec3> &pointVector)
+{
+	pointVector = screenPoints;
 }
 
 bool ModelPart::isComputableContour(std::vector<glm::vec3> contourPoints)

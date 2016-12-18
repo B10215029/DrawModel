@@ -3,6 +3,7 @@
 #include "DrawPanel.h"
 #include "ModelPart.h"
 #include "UVForm.h"
+#include "ContourForm.h"
 
 namespace DrawModel {
 
@@ -147,6 +148,8 @@ private: System::Windows::Forms::Button^  button8;
 private: System::Windows::Forms::Button^  button9;
 private: System::Windows::Forms::Button^  button10;
 private: System::Windows::Forms::Button^  button11;
+private: System::Windows::Forms::Button^  button12;
+private: System::Windows::Forms::Button^  button13;
 	protected:
 
 	private:
@@ -154,9 +157,8 @@ private: System::Windows::Forms::Button^  button11;
 		/// 設計工具所需的變數。
 		/// </summary>
 		DrawPanel *drawPanel;
-private: System::Windows::Forms::Button^  button12;
-private: System::Windows::Forms::Button^  button13;
-		 UVForm uvForm;
+		UVForm uvForm;
+		ContourForm contourForm;
 
 
 #pragma region Windows Form Designer generated code
@@ -1250,15 +1252,20 @@ private: System::Void button10_Click(System::Object^  sender, System::EventArgs^
 }
 private: System::Void listBox1_SelectedIndexChanged(System::Object^  sender, System::EventArgs^  e) {
 	drawPanel->selectPart = listBox1->SelectedIndex;
-	if (drawPanel->selectPart != -1)
+	if (drawPanel->selectPart != -1) {
 		uvForm.SetModelPart(drawPanel->parts[drawPanel->selectPart]);
-	else
+		contourForm.SetModelPart(drawPanel->parts[drawPanel->selectPart]);
+	}
+	else {
 		uvForm.SetModelPart(NULL);
+		contourForm.SetModelPart(NULL);
+	}
 }
 private: System::Void button11_Click(System::Object^  sender, System::EventArgs^  e) {
 	uvForm.Show();
 }
 private: System::Void button12_Click(System::Object^  sender, System::EventArgs^  e) {
+	contourForm.Show();
 }
 private: System::Void button13_Click(System::Object^  sender, System::EventArgs^  e) {
 	if (openFileDialog1->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
