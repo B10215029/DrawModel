@@ -109,7 +109,17 @@ void DrawPanel::MouseDown(int x, int y, int button)
 			selectPart = parts.size() - 1;
 		}
 		else if (operateMode == OperateMode::DrawMode) {
-
+			if (selectPart == -1)
+				return;
+			glm::vec3 screenPos(x, height - y, 0);
+			BindGL();
+			glReadBuffer(GL_FRONT);
+			glReadPixels(screenPos.x, screenPos.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &screenPos.z);
+			ReleaseGL();
+			if (screenPos.z != 1) {
+				glm::vec3 worldPos = glm::unProject(screenPos, ModelPart::viewMatrix * ModelPart::modelMatrix, ModelPart::projectionMatrix, glm::vec4(0, 0, width, height));
+				parts[selectPart]->StartDraw(worldPos);
+			}
 		}
 		else if (operateMode == OperateMode::DeformationMode) {
 
@@ -134,7 +144,9 @@ void DrawPanel::MouseUp(int x, int y, int button)
 			}
 		}
 		else if (operateMode == OperateMode::DrawMode) {
-
+			if (selectPart == -1)
+				return;
+			parts[selectPart]->EndDraw();
 		}
 		else if (operateMode == OperateMode::DeformationMode) {
 
@@ -163,7 +175,17 @@ void DrawPanel::MouseMove(int x, int y)
 			//AddPoint(worldPos.x, worldPos.y, worldPos.z);
 		}
 		else if (operateMode == OperateMode::DrawMode) {
-
+			if (selectPart == -1)
+				return;
+			glm::vec3 screenPos(x, height - y, 0);
+			BindGL();
+			glReadBuffer(GL_FRONT);
+			glReadPixels(screenPos.x, screenPos.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &screenPos.z);
+			ReleaseGL();
+			if (screenPos.z != 1) {
+				glm::vec3 worldPos = glm::unProject(screenPos, ModelPart::viewMatrix * ModelPart::modelMatrix, ModelPart::projectionMatrix, glm::vec4(0, 0, width, height));
+				parts[selectPart]->DrawPoint(worldPos);
+			}
 		}
 		else if (operateMode == OperateMode::DeformationMode) {
 

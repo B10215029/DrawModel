@@ -50,6 +50,9 @@ public:
 	void RenderModel();
 	void AddPoint(float x, float y, float z);
 	void AddPoint(glm::vec3 point);
+	void DrawPoint(glm::vec3 point);
+	void StartDraw(glm::vec3 point);
+	void EndDraw();
 	void CreateFrameBuffer(int width, int height);
 	void CreateMesh();
 	void ReadMesh(const char* fileName);
@@ -106,5 +109,6 @@ private:
 	glm::mat4 mvp;
 	std::vector<glm::vec3> points;
 	std::vector<glm::vec3> screenPoints;
-	std::queue<glm::vec3> pointQueue;
+	std::queue<glm::vec3> strokePointQueue;
+	glm::vec3 drawingPoint;
 };

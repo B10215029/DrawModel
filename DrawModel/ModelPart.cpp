@@ -51,7 +51,7 @@ void ModelPart::InitProgram()
 	drawSolid.colorLocation = glGetUniformLocation(drawSolid.program, "color");
 	drawSolid.textureLocation = glGetUniformLocation(drawSolid.program, "tex0");
 	drawSolid.useTextureLocation = glGetUniformLocation(drawSolid.program, "useTexture");
-	drawSolid.textureHandle = loadTextureFromFilePNG("grid32.png");
+	//drawSolid.textureHandle = loadTextureFromFilePNG("grid32.png");
 	//drawSolid.textureHandle = loadTextureFromFilePNG("testtexture.png");
 	//strokeTextureHandle = loadTextureFromFilePNG("./stroke/stroke1.png");
 	//modelMatrix = glm::mat4(1.0f);
@@ -104,6 +104,10 @@ void ModelPart::Render()
 		RenderModel();
 		//RenderLine();
 	}
+	else if (state == ModelState::STATE_DRAWING) {
+		RenderStroke();
+		RenderModel();
+	}
 	else {
 		RenderContour();
 		//RenderStroke();
@@ -116,57 +120,38 @@ void ModelPart::RenderStroke()
 {
 	glBindVertexArray(0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	if (!pointQueue.empty()) {
+	if (!strokePointQueue.empty()) {
 		glBindFramebuffer(GL_FRAMEBUFFER, strokeFBO);
 		glUseProgram(drawStroke.program);
 		glUniform4fv(drawStroke.colorLocation, 1, glm::value_ptr(strokeColor));
 		glUniform1f(drawStroke.strokeSizeLocation, strokeSize);
-		glUniformMatrix4fv(drawStroke.modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
-		glUniformMatrix4fv(drawStroke.viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
-		glUniformMatrix4fv(drawStroke.projectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+		//glUniformMatrix4fv(drawStroke.modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+		//glUniformMatrix4fv(drawStroke.viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+		//glUniformMatrix4fv(drawStroke.projectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, strokeTextureHandle);
 		glUniform1i(drawStroke.strokeTextureLocation, 0);
 		glEnableVertexAttribArray(0);
-		glm::vec3 *pointTemp = new glm::vec3[pointQueue.size()];
+		glm::vec3 *pointTemp = new glm::vec3[strokePointQueue.size()];
 		int i;
-		for (i = 0; !pointQueue.empty(); i++) {
-			pointTemp[i] = pointQueue.front();
-			pointQueue.pop();
+		for (i = 0; !strokePointQueue.empty(); i++) {
+			pointTemp[i] = strokePointQueue.front();
+			strokePointQueue.pop();
 		}
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, pointTemp);
 		glDrawArrays(GL_POINTS, 0, i);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
-	glClear(GL_DEPTH_BUFFER_BIT);
-	glUseProgram(drawTexture.program);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, strokeFBOColorTexture);
-	glUniform1i(drawTexture.textureLocation, 0);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+	//glClear(GL_DEPTH_BUFFER_BIT);
+	//glUseProgram(drawTexture.program);
+	//glActiveTexture(GL_TEXTURE0);
+	//glBindTexture(GL_TEXTURE_2D, strokeFBOColorTexture);
+	//glUniform1i(drawTexture.textureLocation, 0);
+	//glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
 void ModelPart::RenderLine()
 {
-	//glBindVertexArray(0);
-	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	////glClear(GL_DEPTH_BUFFER_BIT);
-	////glUseProgram(drawColor.program);
-	////glUniform4fv(drawColor.colorLocation, 1, glm::value_ptr(glm::vec4(1, 0, 0, 1)));
-	////glEnableVertexAttribArray(0);
-	////glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, &points[0]);
-	////glDrawArrays(GL_LINE_STRIP, 0, points.size());
-
-	//glUseProgram(drawSolid.program);
-	//glUniformMatrix4fv(drawSolid.modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
-	//glUniformMatrix4fv(drawSolid.viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
-	//glUniformMatrix4fv(drawSolid.projectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-	//glUniform4fv(drawSolid.colorLocation, 1, glm::value_ptr(strokeColor));
-	//glEnableVertexAttribArray(0);
-	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, &points[0]);
-	//glDrawArrays(GL_LINE_STRIP, 0, points.size());
-
-
 	if (!mesh) {
 		return;
 	}
@@ -235,8 +220,6 @@ void ModelPart::RenderUV()
 
 void ModelPart::RenderModel()
 {
-	glBindVertexArray(0);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	if (!mesh) {
 		return;
 	}
@@ -248,33 +231,12 @@ void ModelPart::RenderModel()
 	glUniform1i(drawSolid.textureLocation, 0);
 	glUniform1i(drawSolid.useTextureLocation, 1);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, drawSolid.textureHandle);
+	glBindTexture(GL_TEXTURE_2D, strokeFBOColorTexture);
 	glBindVertexArray(vao);
 	glUniform4fv(drawSolid.colorLocation, 1, glm::value_ptr(glm::vec4(0.5, 0.5, 0.5, 1.0)));
 	glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
 	glUniform1i(drawSolid.useTextureLocation, 0);
-	//if (modelRenderLine) {
-	//	glUniform4fv(drawSolid.colorLocation, 1, glm::value_ptr(glm::vec4(0.2, 0.2, 0.2, 1.0)));
-	//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	//	glEnable(GL_POLYGON_OFFSET_LINE);
-	//	glPolygonOffset(-0.5, -0.5);
-	//	glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
-	//	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	//}
-	//if (modelRenderPoint) {
-	//	glDisable(GL_CULL_FACE);
-	//	glPointSize(5);
-	//	glUniform4fv(drawSolid.colorLocation, 1, glm::value_ptr(glm::vec4(0, 1, 0, 1.0)));
-	//	//glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-	//	glEnable(GL_POLYGON_OFFSET_POINT);
-	//	glPolygonOffset(-0.6, -0.6);
-	//	glDrawArrays(GL_POINTS, 0, vertexCount);
-	//	//glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
-	//	glEnable(GL_CULL_FACE);
-	//	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	//}
 	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void ModelPart::CreateFrameBuffer(int width, int height)
@@ -385,7 +347,7 @@ void ModelPart::AddPoint(glm::vec3 point)
 	glm::vec4 screenPoint = mvp * glm::vec4(point, 1);
 	screenPoint /= screenPoint.w;
 	if (points.empty()) {
-		pointQueue.push(point);
+		strokePointQueue.push(point);
 		points.push_back(point);
 		screenPoints.push_back(screenPoint);
 	}
@@ -407,10 +369,149 @@ void ModelPart::AddPoint(glm::vec3 point)
 			interval = lineLength / (int)(screenLength / strokeInterval);
 			vector = glm::normalize(vector) * -interval;
 			for (int i = 0; i < (int)(screenLength / strokeInterval); i ++) {
-				pointQueue.push(points.back() + vector * float(i));
+				strokePointQueue.push(points.back() + vector * float(i));
 			}
 		}
 	}
+}
+
+double TriangleArea(MyMesh::Point vertex0, MyMesh::Point vertex1, MyMesh::Point vertex2) {
+	//MyMesh::Point x = vertex1 - vertex0;
+	//MyMesh::Point y = vertex2 - vertex0;
+	//double r = 
+	//	(x[1] * y[2] - x[2] * y[1])*(x[1] * y[2] - x[2] * y[1]) + 
+	//	(x[2] * y[0] - x[0] * y[2])*(x[2] * y[0] - x[0] * y[2]) + 
+	//	(x[0] * y[1] - x[1] * y[0])*(x[0] * y[1] - x[1] * y[0]);
+	double a = (vertex0 - vertex1).length();
+	double b = (vertex1 - vertex2).length();
+	double c = (vertex2 - vertex0).length();
+	double s = (a + b + c) / 2;
+	double r = sqrt(s * (s - a) * (s - b) * (s - c));
+	return r;
+}
+
+void ModelPart::DrawPoint(glm::vec3 point)
+{
+	if (state != ModelState::STATE_DRAWING)
+		return;
+
+	//float pointLength = glm::length(point - drawingPoint);
+	//if (pointLength > contourInterval) {
+	//	glm::vec3 vector = point - points.back();
+	//	float lineLength = glm::length(vector);
+	//	// add interpolation stroke
+	//	float interval = lineLength / (int)(screenLength / strokeInterval);
+	//	vector = glm::normalize(vector) * -interval;
+	//	for (int i = 0; i < (int)(screenLength / strokeInterval); i++) {
+	//		strokePointQueue.push(points.back() + vector * float(i));
+	//	}
+	//}
+
+	MyMesh::Point pointP(point.x, point.y, point.z);
+	MyMesh::FaceHandle nearestFace;
+	double faceDistance = DBL_MAX;
+	for (MyMesh::FaceIter f_it = mesh->faces_begin(); f_it != mesh->faces_end(); ++f_it) {
+		MyMesh::Point p[3];
+		int i = 0, j = 2;
+		for (MyMesh::FaceVertexIter fv_it = mesh->fv_begin(f_it); fv_it != mesh->fv_end(f_it); ++fv_it) {
+			p[i++] = mesh->point(fv_it);
+		}
+		double triArea = TriangleArea(p[0], p[1], p[2]);
+		for (i = 0, j = 2; i < 3; j = i++) {
+			triArea -= TriangleArea(p[i], p[j], pointP);
+		}
+		if (abs(triArea) < faceDistance) {
+			nearestFace = f_it.handle();
+			faceDistance = abs(triArea);
+		}
+	}
+	MyMesh::Point p[3];
+	MyMesh::TexCoord2D t[3];
+	double w[4] = {};
+	int i = 0, j = 2;
+	for (MyMesh::FaceVertexIter fv_it = mesh->fv_begin(nearestFace); fv_it != mesh->fv_end(nearestFace); ++fv_it) {
+		t[i] = mesh->texcoord2D(fv_it);
+		p[i++] = mesh->point(fv_it);
+	}
+	//for (i = 0, j = 2; i < 3; j = i++) {
+	//	int k = (i + 1) % 3;
+	//	double tria = TriangleArea(p[i], p[j], pointP);
+	//	w[k] = tria * 2 / (p[i] - p[j]).norm();
+	//	//w[k] = (p[k] - pointP).norm();
+	//	w[3] += w[k];
+	//}
+	//MyMesh::TexCoord2D strokePosition = t[0] * (w[0] / w[3]) + t[1] * (w[1] / w[3]) + t[2] * (w[2] / w[3]);
+	p[2] -= p[0];
+	p[1] -= p[0];
+	pointP -= p[0];
+	glm::vec3 b1(p[2][0], p[2][1], p[2][2]);
+	glm::vec3 b2(p[1][0], p[1][1], p[1][2]);
+	glm::vec3 pp(pointP[0], pointP[1], pointP[2]);
+	glm::vec2 x = glm::inverse(glm::mat2(glm::dot(b1, b1), glm::dot(b1, b2), glm::dot(b2, b1), glm::dot(b2, b2))) * glm::vec2(glm::dot(b1, pp), glm::dot(b2, pp));
+	MyMesh::TexCoord2D strokePosition = t[0] + (t[2] - t[0]) * x[0] + (t[1] - t[0]) * x[1];
+	strokePointQueue.push(glm::vec3(strokePosition[0], strokePosition[1], 0));
+
+	drawingPoint = point;
+}
+
+void ModelPart::StartDraw(glm::vec3 point)
+{
+	//double aa = TriangleArea()
+	if (state != ModelState::STATE_MODEL)
+		return;
+	drawingPoint = point;
+	state = ModelState::STATE_DRAWING;
+	MyMesh::Point pointP(point.x, point.y, point.z);
+	MyMesh::FaceHandle nearestFace;
+	double faceDistance = DBL_MAX;
+	for (MyMesh::FaceIter f_it = mesh->faces_begin(); f_it != mesh->faces_end(); ++f_it) {
+		MyMesh::Point p[3];
+		int i = 0, j = 2;
+		for (MyMesh::FaceVertexIter fv_it = mesh->fv_begin(f_it); fv_it != mesh->fv_end(f_it); ++fv_it) {
+			p[i++] = mesh->point(fv_it);
+		}
+		double triArea = TriangleArea(p[0], p[1], p[2]);
+		for (i = 0, j = 2; i < 3; j = i++) {
+			triArea -= TriangleArea(p[i], p[j], pointP);
+		}
+		if (abs(triArea) < faceDistance) {
+			nearestFace = f_it.handle();
+			faceDistance = abs(triArea);
+		}
+	}
+	printf("point: %lf, %lf, %lf\n", point.x, point.y, point.z);
+	MyMesh::Point p[3];
+	MyMesh::TexCoord2D t[3];
+	double w[4] = {};
+	int i = 0, j = 2;
+	for (MyMesh::FaceVertexIter fv_it = mesh->fv_begin(nearestFace); fv_it != mesh->fv_end(nearestFace); ++fv_it) {
+		t[i] = mesh->texcoord2D(fv_it);
+		p[i++] = mesh->point(fv_it);
+		printf("FaceVertexI: %lf, %lf, %lf\n", mesh->point(fv_it)[0], mesh->point(fv_it)[1], mesh->point(fv_it)[2]);
+	}
+	//for (i = 0, j = 2; i < 3; j = i++) {
+	//	int k = (i + 1) % 3;
+	//	double tria = TriangleArea(p[i], p[j], pointP);
+	//	w[k] = tria * 2 / (p[i] - p[j]).norm();
+	//	//w[k] = (p[k] - pointP).norm();
+	//	w[3] += w[k];
+	//}
+	//MyMesh::TexCoord2D strokePosition = t[0] * (w[0] / w[3]) + t[1] * (w[1] / w[3]) + t[2] * (w[2] / w[3]);
+	p[2] -= p[0];
+	p[1] -= p[0];
+	pointP -= p[0];
+	glm::vec3 b1(p[2][0], p[2][1], p[2][2]);
+	glm::vec3 b2(p[1][0], p[1][1], p[1][2]);
+	glm::vec3 pp(pointP[0], pointP[1], pointP[2]);
+	glm::vec2 x = glm::inverse(glm::mat2(glm::dot(b1, b1), glm::dot(b1, b2), glm::dot(b2, b1), glm::dot(b2, b2))) * glm::vec2(glm::dot(b1, pp), glm::dot(b2, pp));
+	MyMesh::TexCoord2D strokePosition = t[0] + (t[2] - t[0]) * x[0] + (t[1] - t[0]) * x[1];
+	strokePointQueue.push(glm::vec3(strokePosition[0], strokePosition[1], 0));
+	printf("faceDistance: %lf, UV: %lf, %lf\n", faceDistance, strokePosition[0], strokePosition[1]);
+}
+
+void ModelPart::EndDraw()
+{
+	state = ModelState::STATE_MODEL;
 }
 
 void ModelPart::UpdateMeshBuffer()
