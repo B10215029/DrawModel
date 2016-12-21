@@ -158,7 +158,11 @@ private: System::Windows::Forms::Button^  button13;
 		/// </summary>
 		DrawPanel *drawPanel;
 		UVForm uvForm;
-		ContourForm contourForm;
+private: System::Windows::Forms::Button^  button14;
+private: System::Windows::Forms::Button^  button15;
+private: System::Windows::Forms::Button^  button16;
+private: System::Windows::Forms::TextBox^  textBox12;
+		 ContourForm contourForm;
 
 
 #pragma region Windows Form Designer generated code
@@ -207,6 +211,8 @@ private: System::Windows::Forms::Button^  button13;
 			this->textBox8 = (gcnew System::Windows::Forms::TextBox());
 			this->textBox9 = (gcnew System::Windows::Forms::TextBox());
 			this->button4 = (gcnew System::Windows::Forms::Button());
+			this->button15 = (gcnew System::Windows::Forms::Button());
+			this->button16 = (gcnew System::Windows::Forms::Button());
 			this->tabPage4 = (gcnew System::Windows::Forms::TabPage());
 			this->tableLayoutPanel9 = (gcnew System::Windows::Forms::TableLayoutPanel());
 			this->label14 = (gcnew System::Windows::Forms::Label());
@@ -230,8 +236,10 @@ private: System::Windows::Forms::Button^  button13;
 			this->button11 = (gcnew System::Windows::Forms::Button());
 			this->button12 = (gcnew System::Windows::Forms::Button());
 			this->button13 = (gcnew System::Windows::Forms::Button());
+			this->button14 = (gcnew System::Windows::Forms::Button());
 			this->colorDialog1 = (gcnew System::Windows::Forms::ColorDialog());
 			this->openFileDialog1 = (gcnew System::Windows::Forms::OpenFileDialog());
+			this->textBox12 = (gcnew System::Windows::Forms::TextBox());
 			this->tableLayoutPanel1->SuspendLayout();
 			this->tableLayoutPanel2->SuspendLayout();
 			this->groupBox1->SuspendLayout();
@@ -658,32 +666,37 @@ private: System::Windows::Forms::Button^  button13;
 			// 
 			// tableLayoutPanel6
 			// 
-			this->tableLayoutPanel6->ColumnCount = 1;
+			this->tableLayoutPanel6->ColumnCount = 2;
 			this->tableLayoutPanel6->ColumnStyles->Add((gcnew System::Windows::Forms::ColumnStyle(System::Windows::Forms::SizeType::Percent,
-				100)));
-			this->tableLayoutPanel6->ColumnStyles->Add((gcnew System::Windows::Forms::ColumnStyle(System::Windows::Forms::SizeType::Absolute,
-				20)));
-			this->tableLayoutPanel6->Controls->Add(this->button3, 0, 1);
-			this->tableLayoutPanel6->Controls->Add(this->textBox8, 0, 0);
-			this->tableLayoutPanel6->Controls->Add(this->textBox9, 0, 2);
-			this->tableLayoutPanel6->Controls->Add(this->button4, 0, 3);
+				50)));
+			this->tableLayoutPanel6->ColumnStyles->Add((gcnew System::Windows::Forms::ColumnStyle(System::Windows::Forms::SizeType::Percent,
+				50)));
+			this->tableLayoutPanel6->Controls->Add(this->button3, 0, 0);
+			this->tableLayoutPanel6->Controls->Add(this->button4, 0, 1);
+			this->tableLayoutPanel6->Controls->Add(this->button15, 0, 2);
+			this->tableLayoutPanel6->Controls->Add(this->button16, 0, 3);
+			this->tableLayoutPanel6->Controls->Add(this->textBox8, 1, 0);
+			this->tableLayoutPanel6->Controls->Add(this->textBox9, 1, 1);
+			this->tableLayoutPanel6->Controls->Add(this->textBox12, 1, 3);
 			this->tableLayoutPanel6->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->tableLayoutPanel6->Location = System::Drawing::Point(3, 3);
 			this->tableLayoutPanel6->Name = L"tableLayoutPanel6";
 			this->tableLayoutPanel6->RowCount = 4;
+			this->tableLayoutPanel6->RowStyles->Add((gcnew System::Windows::Forms::RowStyle(System::Windows::Forms::SizeType::Percent, 25.00001F)));
 			this->tableLayoutPanel6->RowStyles->Add((gcnew System::Windows::Forms::RowStyle(System::Windows::Forms::SizeType::Percent, 25)));
 			this->tableLayoutPanel6->RowStyles->Add((gcnew System::Windows::Forms::RowStyle(System::Windows::Forms::SizeType::Percent, 25)));
 			this->tableLayoutPanel6->RowStyles->Add((gcnew System::Windows::Forms::RowStyle(System::Windows::Forms::SizeType::Percent, 25)));
-			this->tableLayoutPanel6->RowStyles->Add((gcnew System::Windows::Forms::RowStyle(System::Windows::Forms::SizeType::Percent, 25)));
+			this->tableLayoutPanel6->RowStyles->Add((gcnew System::Windows::Forms::RowStyle(System::Windows::Forms::SizeType::Absolute, 20)));
+			this->tableLayoutPanel6->RowStyles->Add((gcnew System::Windows::Forms::RowStyle(System::Windows::Forms::SizeType::Absolute, 20)));
 			this->tableLayoutPanel6->Size = System::Drawing::Size(121, 119);
 			this->tableLayoutPanel6->TabIndex = 0;
 			// 
 			// button3
 			// 
 			this->button3->Dock = System::Windows::Forms::DockStyle::Fill;
-			this->button3->Location = System::Drawing::Point(3, 32);
+			this->button3->Location = System::Drawing::Point(3, 3);
 			this->button3->Name = L"button3";
-			this->button3->Size = System::Drawing::Size(115, 23);
+			this->button3->Size = System::Drawing::Size(54, 23);
 			this->button3->TabIndex = 1;
 			this->button3->Text = L"extraction";
 			this->button3->UseVisualStyleBackColor = true;
@@ -692,31 +705,53 @@ private: System::Windows::Forms::Button^  button13;
 			// textBox8
 			// 
 			this->textBox8->Dock = System::Windows::Forms::DockStyle::Fill;
-			this->textBox8->Location = System::Drawing::Point(3, 3);
+			this->textBox8->Location = System::Drawing::Point(63, 3);
 			this->textBox8->Name = L"textBox8";
-			this->textBox8->Size = System::Drawing::Size(115, 22);
+			this->textBox8->Size = System::Drawing::Size(55, 22);
 			this->textBox8->TabIndex = 2;
 			this->textBox8->Text = L"2";
 			// 
 			// textBox9
 			// 
 			this->textBox9->Dock = System::Windows::Forms::DockStyle::Fill;
-			this->textBox9->Location = System::Drawing::Point(3, 61);
+			this->textBox9->Location = System::Drawing::Point(63, 32);
 			this->textBox9->Name = L"textBox9";
-			this->textBox9->Size = System::Drawing::Size(115, 22);
+			this->textBox9->Size = System::Drawing::Size(55, 22);
 			this->textBox9->TabIndex = 3;
 			this->textBox9->Text = L"3";
 			// 
 			// button4
 			// 
 			this->button4->Dock = System::Windows::Forms::DockStyle::Fill;
-			this->button4->Location = System::Drawing::Point(3, 90);
+			this->button4->Location = System::Drawing::Point(3, 32);
 			this->button4->Name = L"button4";
-			this->button4->Size = System::Drawing::Size(115, 26);
+			this->button4->Size = System::Drawing::Size(54, 23);
 			this->button4->TabIndex = 4;
 			this->button4->Text = L"smooth";
 			this->button4->UseVisualStyleBackColor = true;
 			this->button4->Click += gcnew System::EventHandler(this, &MainForm::button4_Click);
+			// 
+			// button15
+			// 
+			this->button15->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->button15->Location = System::Drawing::Point(3, 61);
+			this->button15->Name = L"button15";
+			this->button15->Size = System::Drawing::Size(54, 23);
+			this->button15->TabIndex = 5;
+			this->button15->Text = L"update normal";
+			this->button15->UseVisualStyleBackColor = true;
+			this->button15->Click += gcnew System::EventHandler(this, &MainForm::button15_Click);
+			// 
+			// button16
+			// 
+			this->button16->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->button16->Location = System::Drawing::Point(3, 90);
+			this->button16->Name = L"button16";
+			this->button16->Size = System::Drawing::Size(54, 26);
+			this->button16->TabIndex = 6;
+			this->button16->Text = L"update UV";
+			this->button16->UseVisualStyleBackColor = true;
+			this->button16->Click += gcnew System::EventHandler(this, &MainForm::button16_Click);
 			// 
 			// tabPage4
 			// 
@@ -924,6 +959,7 @@ private: System::Windows::Forms::Button^  button13;
 			this->tableLayoutPanel10->Controls->Add(this->button11, 0, 4);
 			this->tableLayoutPanel10->Controls->Add(this->button12, 0, 5);
 			this->tableLayoutPanel10->Controls->Add(this->button13, 0, 7);
+			this->tableLayoutPanel10->Controls->Add(this->button14, 0, 8);
 			this->tableLayoutPanel10->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->tableLayoutPanel10->Location = System::Drawing::Point(3, 3);
 			this->tableLayoutPanel10->Name = L"tableLayoutPanel10";
@@ -1030,9 +1066,29 @@ private: System::Windows::Forms::Button^  button13;
 			this->button13->UseVisualStyleBackColor = true;
 			this->button13->Click += gcnew System::EventHandler(this, &MainForm::button13_Click);
 			// 
+			// button14
+			// 
+			this->button14->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->button14->Location = System::Drawing::Point(3, 323);
+			this->button14->Name = L"button14";
+			this->button14->Size = System::Drawing::Size(38, 34);
+			this->button14->TabIndex = 7;
+			this->button14->Text = L"¸ü¹Ï";
+			this->button14->UseVisualStyleBackColor = true;
+			this->button14->Click += gcnew System::EventHandler(this, &MainForm::button14_Click);
+			// 
 			// openFileDialog1
 			// 
 			this->openFileDialog1->FileName = L"openFileDialog1";
+			// 
+			// textBox12
+			// 
+			this->textBox12->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->textBox12->Location = System::Drawing::Point(63, 90);
+			this->textBox12->Name = L"textBox12";
+			this->textBox12->Size = System::Drawing::Size(55, 22);
+			this->textBox12->TabIndex = 7;
+			this->textBox12->Text = L"0";
 			// 
 			// MainForm
 			// 
@@ -1086,6 +1142,9 @@ protected: virtual bool ProcessCmdKey(System::Windows::Forms::Message% msg, Syst
 	}
 	if (keyData == Keys::D6) {
 		button12_Click(gcnew System::Object, gcnew System::EventArgs);
+	}
+	if (keyData == Keys::C) {
+		drawPanel->ClearModelStroke();
 	}
 	return Form::ProcessCmdKey(msg, keyData);
 }
@@ -1272,6 +1331,24 @@ private: System::Void button13_Click(System::Object^  sender, System::EventArgs^
 		drawPanel->LoadModel((const char*)(System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(openFileDialog1->FileName)).ToPointer());
 		listBox1->Items->Add(String::Format("New Item {0}", listBox1->Items->Count));
 		listBox1->SelectedIndex = drawPanel->selectPart;
+	}
+}
+private: System::Void button14_Click(System::Object^  sender, System::EventArgs^  e) {
+	if (openFileDialog1->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
+		drawPanel->LoadModelTexture((const char*)(System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(openFileDialog1->FileName)).ToPointer());
+	}
+}
+private: System::Void button15_Click(System::Object^  sender, System::EventArgs^  e) {
+	if (listBox1->SelectedIndex >= 0) {
+		drawPanel->UpdateNormal(listBox1->SelectedIndex);
+	}
+}
+private: System::Void button16_Click(System::Object^  sender, System::EventArgs^  e) {
+	if (listBox1->SelectedIndex >= 0) {
+		try {
+			drawPanel->UpdateUV(listBox1->SelectedIndex, int::Parse(textBox12->Text));
+		}
+		catch (...) {}
 	}
 }
 };

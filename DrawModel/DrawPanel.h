@@ -44,9 +44,13 @@ public:
 	void ReCreatePart(int id);
 	void ExtractionPart(int id, float s);
 	void SmoothPart(int id, int step);
+	void UpdateNormal(int id);
+	void UpdateUV(int id, int center);
 	void SetView(ViewDirection viewDirection);
 	void ExportOBJ(const char* fileName);
 	void LoadModel(const char* fileName);
+	void LoadModelTexture(const char* fileName);
+	void ClearModelStroke();
 
 	bool cleanStroke;
 	glm::vec3 transform;

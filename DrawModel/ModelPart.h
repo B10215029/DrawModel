@@ -59,10 +59,15 @@ public:
 	void UpdateMeshBuffer();
 	void ExtractionMesh(float s);
 	void SmoothMesh(int step);
+	void UpdateNormal();
+	void UpdateUV(int center);
 	bool isPointOnMesh(glm::vec3 point);
 	float meshPointDistance(glm::vec3 point);
 	void readUVEdge(std::vector<glm::vec3> &uvVector);
 	void readContourScreenPoint(std::vector<glm::vec3> &pointVector);
+	void SetTexture(GLuint textureID);
+
+	bool clearStroke;
 
 private:
 	static bool isComputableContour(std::vector<glm::vec3> contourPoints);
@@ -106,6 +111,8 @@ private:
 	MyMesh* mesh;
 	GLuint strokeFBO;
 	GLuint strokeFBOColorTexture;
+	GLuint modelTexture;
+	bool drawModelTexture;
 	glm::mat4 mvp;
 	std::vector<glm::vec3> points;
 	std::vector<glm::vec3> screenPoints;

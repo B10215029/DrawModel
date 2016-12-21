@@ -277,6 +277,26 @@ void DrawPanel::SmoothPart(int id, int step)
 	}
 }
 
+void DrawPanel::UpdateNormal(int id)
+{
+	if (id >= 0 && id < parts.size()) {
+		BindGL();
+		parts[id]->UpdateNormal();
+		parts[id]->UpdateMeshBuffer();
+		ReleaseGL();
+	}
+}
+
+void DrawPanel::UpdateUV(int id, int center)
+{
+	if (id >= 0 && id < parts.size()) {
+		BindGL();
+		parts[id]->UpdateUV(center);
+		parts[id]->UpdateMeshBuffer();
+		ReleaseGL();
+	}
+}
+
 void DrawPanel::SetView(ViewDirection viewDirection)
 {
 	switch (viewDirection) {
@@ -326,7 +346,24 @@ void DrawPanel::LoadModel(const char* fileName)
 	parts.push_back(new ModelPart());
 	parts.back()->ReadMesh(fileName);
 	BindGL();
+	parts.back()->CreateFrameBuffer(width, height);
 	parts.back()->UpdateMeshBuffer();
 	ReleaseGL();
 	selectPart = parts.size() - 1;
+}
+
+void DrawPanel::LoadModelTexture(const char* fileName)
+{
+	if (selectPart != -1) {
+		BindGL();
+		parts[selectPart]->SetTexture(loadTextureFromFilePNG(fileName));
+		ReleaseGL();
+	}
+}
+
+void DrawPanel::ClearModelStroke()
+{
+	if (selectPart != -1) {
+		parts[selectPart]->clearStroke = true;
+	}
 }

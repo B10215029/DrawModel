@@ -91,6 +91,8 @@ ModelPart::ModelPart()
 {
 	mesh = NULL;
 	mvp = projectionMatrix * viewMatrix * modelMatrix;
+	clearStroke = false;
+	drawModelTexture = false;
 	state = ModelState::STATE_NONE;
 }
 
@@ -103,6 +105,9 @@ void ModelPart::Render()
 	if (state == ModelState::STATE_MODEL) {
 		RenderModel();
 		//RenderLine();
+		if (clearStroke) {
+			RenderStroke();
+		}
 	}
 	else if (state == ModelState::STATE_DRAWING) {
 		RenderStroke();
@@ -119,7 +124,24 @@ void ModelPart::Render()
 void ModelPart::RenderStroke()
 {
 	glBindVertexArray(0);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	if (clearStroke) {
+		glBindFramebuffer(GL_FRAMEBUFFER, strokeFBO);
+		float clrCol[4];
+		glGetFloatv(GL_COLOR_CLEAR_VALUE, clrCol);
+		glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glClearColor(clrCol[0], clrCol[1], clrCol[2], clrCol[3]);
+		clearStroke = false;
+	}
+	if (drawModelTexture) {
+		glBindFramebuffer(GL_FRAMEBUFFER, strokeFBO);
+		glUseProgram(drawTexture.program);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, modelTexture);
+		glUniform1i(drawTexture.textureLocation, 0);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		drawModelTexture = false;
+	}
 	if (!strokePointQueue.empty()) {
 		glBindFramebuffer(GL_FRAMEBUFFER, strokeFBO);
 		glUseProgram(drawStroke.program);
@@ -140,8 +162,8 @@ void ModelPart::RenderStroke()
 		}
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, pointTemp);
 		glDrawArrays(GL_POINTS, 0, i);
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	//glClear(GL_DEPTH_BUFFER_BIT);
 	//glUseProgram(drawTexture.program);
 	//glActiveTexture(GL_TEXTURE0);
@@ -155,7 +177,7 @@ void ModelPart::RenderLine()
 	if (!mesh) {
 		return;
 	}
-	glLineWidth(3);
+	glLineWidth(1);
 	glBindVertexArray(vao);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glUseProgram(drawSolid.program);
@@ -334,6 +356,21 @@ void ModelPart::SmoothMesh(int step)
 {
 	if (mesh) {
 		mesh->Smooth(step);
+	}
+}
+
+void ModelPart::UpdateNormal()
+{
+	if (mesh) {
+		mesh->update_normals();
+	}
+}
+
+void ModelPart::UpdateUV(int center)
+{
+	if (mesh) {
+		mesh->ResetUV();
+		mesh->ComputeUV(MyMesh::VertexHandle(center));
 	}
 }
 
@@ -666,4 +703,11 @@ bool ModelPart::isComputableContour(std::vector<glm::vec3> contourPoints)
 		}
 	}
 	return true;
+}
+
+void ModelPart::SetTexture(GLuint textureID)
+{
+	modelTexture = textureID;
+	clearStroke = true;
+	drawModelTexture = true;
 }
