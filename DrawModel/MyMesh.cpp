@@ -233,27 +233,11 @@ void MyMesh::ComputeUV(VertexHandle vh, OpenMesh::Vec2d centerUV)
 		}
 	}
 
-	//const double* d = normal(vh).data();
-	//glm::vec3 normal(d[0], d[1], d[2]);
-	//glm::vec3 base1 = glm::normalize(glm::cross(normal, glm::vec3(1, 0, 0)));
-	//glm::vec3 base2 = glm::normalize(glm::cross(normal, base1));
-	//set_texcoord2D(vh, centerUV);
-	//property(hasUV, vh) = true;
-	//for (VertexVertexIter vv_it = vv_begin(vh); vv_it != vv_end(vh); ++vv_it) {
-	//	if (property(hasUV, vv_it))
-	//		continue;
-	//	d = (point(vv_it) - point(vh)).data();
-	//	glm::vec3 v(d[0], d[1], d[2]);
-	//	glm::vec2 uv(glm::dot(v, base1), glm::dot(v, base2));
-	//	uv = glm::normalize(uv) * glm::length(v);
-	//	OpenMesh::Vec2f texV = OpenMesh::Vec2f(uv.x, uv.y) * 10 + centerUV;
-	//	ComputeUV(vv_it.handle(), OpenMesh::Vec2f(uv.x, uv.y));
-	//	//set_texcoord2D(vv_it, texV);
-	//}
-
-	//for (VertexIter v_it = vertices_begin(); v_it != vertices_end(); ++v_it) {
-	//	set_texcoord2D(v_it, OpenMesh::Vec2f((float)rand() / RAND_MAX, (float)rand() / RAND_MAX));
-	//}
+	for (VertexIter v_it = vertices_begin(); v_it != vertices_end(); ++v_it) {
+		for (VertexIHalfedgeIter vhe_it = vih_begin(v_it); vhe_it != vih_end(v_it); ++vhe_it) {
+			set_texcoord2D(vhe_it, texcoord2D(v_it));
+		}
+	}
 	//for (HalfedgeIter he_it = halfedges_begin(); he_it != halfedges_end(); ++he_it) {
 	//	set_texcoord2D(he_it, OpenMesh::Vec2f((float)rand() / RAND_MAX, (float)rand() / RAND_MAX));
 	//}

@@ -599,61 +599,18 @@ void ModelPart::UpdateMeshBuffer()
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 
-	maxPointDist = 0;
-	vertexCount = mesh->n_vertices();
-	GLdouble *vertexData = new GLdouble[vertexCount * 8];
-	for (MyMesh::VertexIter v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it) {
-		memcpy(vertexData + (v_it->idx() * 8), mesh->point(v_it.handle()).data(), sizeof(GLdouble) * 3);
-		memcpy(vertexData + (v_it->idx() * 8 + 3), mesh->normal(v_it.handle()).data(), sizeof(GLdouble) * 3);
-		vertexData[v_it->idx() * 8 + 6] = mesh->texcoord2D(v_it.handle()).data()[0];
-		vertexData[v_it->idx() * 8 + 7] = mesh->texcoord2D(v_it.handle()).data()[1];
-		for (int i = 0; i < 3; i++) {
-			if (abs(mesh->point(v_it.handle())[i]) > maxPointDist) {
-				maxPointDist = abs(mesh->point(v_it.handle())[i]);
-			}
-		}
-	}
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, vertexCount * sizeof(GLdouble) * 8, vertexData, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, sizeof(GLdouble) * 8, 0);
-	glVertexAttribPointer(1, 3, GL_DOUBLE, GL_FALSE, sizeof(GLdouble) * 8, (GLvoid*)(sizeof(GLdouble) * 3));
-	glVertexAttribPointer(2, 2, GL_DOUBLE, GL_FALSE, sizeof(GLdouble) * 8, (GLvoid*)(sizeof(GLdouble) * 6));
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(2);
-	delete[] vertexData;
-
-	faceCount = mesh->n_faces();
-	GLuint *vertexIndices = new GLuint[faceCount * 3];
-	for (MyMesh::FaceIter f_it = mesh->faces_begin(); f_it != mesh->faces_end(); ++f_it) {
-		int i = 0;
-		for (MyMesh::FaceVertexIter fv_it = mesh->fv_iter(f_it.handle()); fv_it.is_valid(); ++fv_it, ++i) {
-			vertexIndices[f_it->idx() * 3 + i] = fv_it->idx();
-		}
-	}
-	glGenBuffers(1, &ebo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, faceCount * sizeof(GLuint) * 3, vertexIndices, GL_STATIC_DRAW);
-	delete[] vertexIndices;
-
-
-
 	//maxPointDist = 0;
-	//vertexCount = 0;
-	//faceCount = mesh->n_faces();
-	//GLdouble *vertexData = new GLdouble[faceCount * 3 * 8];
-	//GLuint *vertexIndices = new GLuint[faceCount * 3];
-	//for (MyMesh::FaceIter f_it = mesh->faces_begin(); f_it != mesh->faces_end(); ++f_it) {
-	//	for (MyMesh::FaceHalfedgeIter fhe_it = mesh->fh_begin(f_it.handle()); fhe_it != mesh->fh_end(f_it.handle()); ++fhe_it) {
-	//		memcpy(vertexData + (vertexCount * 8 + 0), mesh->point(mesh->to_vertex_handle(fhe_it)).data(), sizeof(GLdouble) * 3);
-	//		memcpy(vertexData + (vertexCount * 8 + 3), mesh->normal(mesh->to_vertex_handle(fhe_it)).data(), sizeof(GLdouble) * 3);
-	//		//vertexData[vertexCount * 8 + 6] = 0.5;
-	//		//vertexData[vertexCount * 8 + 7] = 0.5;
-	//		vertexData[vertexCount * 8 + 6] = mesh->texcoord2D(fhe_it.handle()).data()[0];
-	//		vertexData[vertexCount * 8 + 7] = mesh->texcoord2D(fhe_it.handle()).data()[1];
-	//		vertexIndices[vertexCount] = vertexCount;
-	//		vertexCount++;
+	//vertexCount = mesh->n_vertices();
+	//GLdouble *vertexData = new GLdouble[vertexCount * 8];
+	//for (MyMesh::VertexIter v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it) {
+	//	memcpy(vertexData + (v_it->idx() * 8), mesh->point(v_it.handle()).data(), sizeof(GLdouble) * 3);
+	//	memcpy(vertexData + (v_it->idx() * 8 + 3), mesh->normal(v_it.handle()).data(), sizeof(GLdouble) * 3);
+	//	vertexData[v_it->idx() * 8 + 6] = mesh->texcoord2D(v_it.handle()).data()[0];
+	//	vertexData[v_it->idx() * 8 + 7] = mesh->texcoord2D(v_it.handle()).data()[1];
+	//	for (int i = 0; i < 3; i++) {
+	//		if (abs(mesh->point(v_it.handle())[i]) > maxPointDist) {
+	//			maxPointDist = abs(mesh->point(v_it.handle())[i]);
+	//		}
 	//	}
 	//}
 	//glGenBuffers(1, &vbo);
@@ -665,11 +622,54 @@ void ModelPart::UpdateMeshBuffer()
 	//glEnableVertexAttribArray(0);
 	//glEnableVertexAttribArray(1);
 	//glEnableVertexAttribArray(2);
+	//delete[] vertexData;
+
+	//faceCount = mesh->n_faces();
+	//GLuint *vertexIndices = new GLuint[faceCount * 3];
+	//for (MyMesh::FaceIter f_it = mesh->faces_begin(); f_it != mesh->faces_end(); ++f_it) {
+	//	int i = 0;
+	//	for (MyMesh::FaceVertexIter fv_it = mesh->fv_iter(f_it.handle()); fv_it.is_valid(); ++fv_it, ++i) {
+	//		vertexIndices[f_it->idx() * 3 + i] = fv_it->idx();
+	//	}
+	//}
 	//glGenBuffers(1, &ebo);
 	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, faceCount * sizeof(GLuint) * 3, vertexIndices, GL_STATIC_DRAW);
-	//delete[] vertexData;
 	//delete[] vertexIndices;
+
+
+
+	maxPointDist = 0;
+	vertexCount = 0;
+	faceCount = mesh->n_faces();
+	GLdouble *vertexData = new GLdouble[faceCount * 3 * 8];
+	GLuint *vertexIndices = new GLuint[faceCount * 3];
+	for (MyMesh::FaceIter f_it = mesh->faces_begin(); f_it != mesh->faces_end(); ++f_it) {
+		for (MyMesh::FaceHalfedgeIter fhe_it = mesh->fh_begin(f_it.handle()); fhe_it != mesh->fh_end(f_it.handle()); ++fhe_it) {
+			memcpy(vertexData + (vertexCount * 8 + 0), mesh->point(mesh->to_vertex_handle(fhe_it)).data(), sizeof(GLdouble) * 3);
+			memcpy(vertexData + (vertexCount * 8 + 3), mesh->normal(mesh->to_vertex_handle(fhe_it)).data(), sizeof(GLdouble) * 3);
+			//vertexData[vertexCount * 8 + 6] = 0.5;
+			//vertexData[vertexCount * 8 + 7] = 0.5;
+			vertexData[vertexCount * 8 + 6] = mesh->texcoord2D(fhe_it.handle()).data()[0];
+			vertexData[vertexCount * 8 + 7] = mesh->texcoord2D(fhe_it.handle()).data()[1];
+			vertexIndices[vertexCount] = vertexCount;
+			vertexCount++;
+		}
+	}
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, vertexCount * sizeof(GLdouble) * 8, vertexData, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, sizeof(GLdouble) * 8, 0);
+	glVertexAttribPointer(1, 3, GL_DOUBLE, GL_FALSE, sizeof(GLdouble) * 8, (GLvoid*)(sizeof(GLdouble) * 3));
+	glVertexAttribPointer(2, 2, GL_DOUBLE, GL_FALSE, sizeof(GLdouble) * 8, (GLvoid*)(sizeof(GLdouble) * 6));
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
+	glGenBuffers(1, &ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, faceCount * sizeof(GLuint) * 3, vertexIndices, GL_STATIC_DRAW);
+	delete[] vertexData;
+	delete[] vertexIndices;
 
 
 
@@ -700,10 +700,9 @@ void ModelPart::readUVEdge(std::vector<glm::vec3> &uvVector)
 	uvVector.clear();
 	if (!mesh)
 		return;
-	for (MyMesh::EdgeIter e_it = mesh->edges_begin(); e_it != mesh->edges_end(); ++e_it) {
-		MyMesh::HalfedgeHandle he = mesh->halfedge_handle(e_it, 0);
-		OpenMesh::Vec2d uv1 = mesh->texcoord2D(mesh->from_vertex_handle(he));
-		OpenMesh::Vec2d uv2 = mesh->texcoord2D(mesh->to_vertex_handle(he));
+	for (MyMesh::HalfedgeIter he_it = mesh->halfedges_begin(); he_it != mesh->halfedges_end(); ++he_it) {
+		OpenMesh::Vec2d uv1 = mesh->texcoord2D(he_it);
+		OpenMesh::Vec2d uv2 = mesh->texcoord2D(mesh->next_halfedge_handle(he_it));
 		uvVector.push_back(glm::vec3(uv1.data()[0], uv1.data()[1], 0));
 		uvVector.push_back(glm::vec3(uv2.data()[0], uv2.data()[1], 0));
 	}
