@@ -31,6 +31,7 @@ void ModelPart::InitProgram()
 {
 	drawTexture.program = loadProgram(IDR_SHADER3, IDR_SHADER4);
 	drawTexture.textureLocation = glGetUniformLocation(drawTexture.program, "image");
+	drawTexture.flipYLocation = glGetUniformLocation(drawTexture.program, "flipY");
 	drawColor.program = loadProgram(IDR_SHADER6, IDR_SHADER5);
 	drawColor.modelMatrixLocation = glGetUniformLocation(drawColor.program, "model_matrix");
 	drawColor.viewMatrixLocation = glGetUniformLocation(drawColor.program, "view_matrix");
@@ -94,6 +95,9 @@ ModelPart::ModelPart()
 	clearStroke = false;
 	drawModelTexture = false;
 	state = ModelState::STATE_NONE;
+	strokeTextureUV = 0;
+	strokeFBOTextureExpired = false;
+	strokeFBOTextureData = NULL;
 }
 
 ModelPart::~ModelPart()
@@ -132,6 +136,12 @@ void ModelPart::RenderStroke()
 		glClear(GL_COLOR_BUFFER_BIT);
 		glClearColor(clrCol[0], clrCol[1], clrCol[2], clrCol[3]);
 		clearStroke = false;
+		if (!drawModelTexture) {
+			if (strokeFBOTextureData)
+				free(strokeFBOTextureData);
+			strokeFBOTextureData = writeTextureToArray(strokeFBOColorTexture);
+			strokeFBOTextureExpired = true;
+		}
 	}
 	if (drawModelTexture) {
 		glBindFramebuffer(GL_FRAMEBUFFER, strokeFBO);
@@ -139,8 +149,13 @@ void ModelPart::RenderStroke()
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, modelTexture);
 		glUniform1i(drawTexture.textureLocation, 0);
+		glUniform1i(drawTexture.flipYLocation, 0);
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		drawModelTexture = false;
+		if (strokeFBOTextureData)
+			free(strokeFBOTextureData);
+		strokeFBOTextureData = writeTextureToArray(strokeFBOColorTexture);
+		strokeFBOTextureExpired = true;
 	}
 	if (!strokePointQueue.empty()) {
 		glBindFramebuffer(GL_FRAMEBUFFER, strokeFBO);
@@ -277,6 +292,22 @@ void ModelPart::CreateFrameBuffer(int width, int height)
 	glClear(GL_COLOR_BUFFER_BIT);
 	glClearColor(clrCol[0], clrCol[1], clrCol[2], clrCol[3]);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	strokeFBOTextureWidth = width;
+	strokeFBOTextureHeight = height;
+	if (strokeFBOTextureData)
+		free(strokeFBOTextureData);
+	strokeFBOTextureData = writeTextureToArray(strokeFBOColorTexture);
+	strokeFBOTextureExpired = true;
+}
+
+GLuint ModelPart::getStrokeFBOTexture()
+{
+	if (strokeFBOTextureExpired) {
+		glDeleteTextures(1, &strokeTextureUV);
+		strokeTextureUV = loadTextureFromArray(strokeFBOTextureData, strokeFBOTextureWidth, strokeFBOTextureHeight, 4);
+		strokeFBOTextureExpired = false;
+	}
+	return strokeTextureUV;
 }
 
 void ModelPart::CreateMesh()
@@ -549,6 +580,10 @@ void ModelPart::StartDraw(glm::vec3 point)
 void ModelPart::EndDraw()
 {
 	state = ModelState::STATE_MODEL;
+	if (strokeFBOTextureData)
+		free(strokeFBOTextureData);
+	strokeFBOTextureData = writeTextureToArray(strokeFBOColorTexture);
+	strokeFBOTextureExpired = true;
 }
 
 void ModelPart::UpdateMeshBuffer()

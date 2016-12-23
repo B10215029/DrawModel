@@ -22,3 +22,5 @@ GLuint loadProgram(const char* vertexShaderFilePath, const char* fragmentShaderF
 
 // 根據Shader的資源檔ID讀取Shader並link到一個新Program
 GLuint loadProgram(const int vertexShaderResourceId, const int fragmentShaderResourceId);
+
+unsigned char* writeTextureToArray(GLuint textureID);

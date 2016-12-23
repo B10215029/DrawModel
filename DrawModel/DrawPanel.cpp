@@ -146,7 +146,9 @@ void DrawPanel::MouseUp(int x, int y, int button)
 		else if (operateMode == OperateMode::DrawMode) {
 			if (selectPart == -1)
 				return;
+			BindGL();
 			parts[selectPart]->EndDraw();
+			ReleaseGL();
 		}
 		else if (operateMode == OperateMode::DeformationMode) {
 

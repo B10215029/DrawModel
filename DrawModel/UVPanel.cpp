@@ -24,6 +24,7 @@ void UVPanel::Initialize()
 	glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
 	drawTexture.program = loadProgram(IDR_SHADER3, IDR_SHADER4);
 	drawTexture.textureLocation = glGetUniformLocation(drawTexture.program, "image");
+	drawTexture.flipYLocation = glGetUniformLocation(drawTexture.program, "flipY");
 	drawColor.program = loadProgram(IDR_SHADER6, IDR_SHADER5);
 	drawColor.modelMatrixLocation = glGetUniformLocation(drawColor.program, "model_matrix");
 	drawColor.viewMatrixLocation = glGetUniformLocation(drawColor.program, "view_matrix");
@@ -47,7 +48,7 @@ void UVPanel::Display()
 
 	glBindVertexArray(0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT);
 
 	if (!part)
 		return;
@@ -58,6 +59,13 @@ void UVPanel::Display()
 	glm::mat4 modelMat;
 	modelMat = glm::translate(glm::mat4(1), glm::vec3(-1.0 / zoom, -1.0 / zoom, 0));
 	modelMat = glm::scale(modelMat, glm::vec3(2.0 / zoom, 2.0 / zoom, 1));
+
+	glUseProgram(drawTexture.program);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, part->getStrokeFBOTexture());
+	glUniform1i(drawTexture.textureLocation, 0);
+	glUniform1i(drawTexture.flipYLocation, 1);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
 	glUseProgram(drawColor.program);
 	glUniformMatrix4fv(drawColor.modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelMat));

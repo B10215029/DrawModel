@@ -66,6 +66,7 @@ public:
 	void readUVEdge(std::vector<glm::vec3> &uvVector);
 	void readContourScreenPoint(std::vector<glm::vec3> &pointVector);
 	void SetTexture(GLuint textureID);
+	GLuint getStrokeFBOTexture();
 
 	bool clearStroke;
 
@@ -75,6 +76,7 @@ private:
 	static struct DrawTextureProgram {
 		GLuint program;
 		GLuint textureLocation;
+		GLuint flipYLocation;
 	} drawTexture;
 	static struct DrawColorProgram {
 		GLuint program;
@@ -118,4 +120,9 @@ private:
 	std::vector<glm::vec3> screenPoints;
 	std::queue<glm::vec3> strokePointQueue;
 	glm::vec3 drawingPoint;
+	GLuint strokeTextureUV;
+	int strokeFBOTextureWidth;
+	int strokeFBOTextureHeight;
+	unsigned char* strokeFBOTextureData;
+	bool strokeFBOTextureExpired;
 };

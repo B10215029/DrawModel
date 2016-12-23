@@ -23,6 +23,7 @@ private:
 	struct DrawTextureProgram {
 		GLuint program;
 		GLuint textureLocation;
+		GLuint flipYLocation;
 	} drawTexture;
 	struct DrawColorProgram {
 		GLuint program;
