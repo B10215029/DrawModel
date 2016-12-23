@@ -422,23 +422,23 @@ void ModelPart::AddPoint(glm::vec3 point)
 	else {
 		float screenLength = glm::length(glm::vec3(screenPoint) - screenPoints.back());
 		if (screenLength > contourInterval) {
-			glm::vec3 vector = point - points.back();
-			float lineLength = glm::length(vector);
-			// add interpolation point
-			float interval = lineLength / (int)(screenLength / contourInterval);
-			vector = glm::normalize(vector) * interval;
-			for (int i = 1; i < (int)(screenLength / contourInterval); i ++) {
-				points.push_back(points.back() + vector);
-			}
+			//glm::vec3 vector = point - points.back();
+			//float lineLength = glm::length(vector);
+			//// add interpolation point
+			//float interval = lineLength / (int)(screenLength / contourInterval);
+			//vector = glm::normalize(vector) * interval;
+			//for (int i = 1; i < (int)(screenLength / contourInterval); i ++) {
+			//	points.push_back(points.back() + vector);
+			//}
 			// add point
 			points.push_back(point);
 			screenPoints.push_back(screenPoint);
-			// add interpolation stroke
-			interval = lineLength / (int)(screenLength / strokeInterval);
-			vector = glm::normalize(vector) * -interval;
-			for (int i = 0; i < (int)(screenLength / strokeInterval); i ++) {
-				strokePointQueue.push(points.back() + vector * float(i));
-			}
+			//// add interpolation stroke
+			//interval = lineLength / (int)(screenLength / strokeInterval);
+			//vector = glm::normalize(vector) * -interval;
+			//for (int i = 0; i < (int)(screenLength / strokeInterval); i ++) {
+			//	strokePointQueue.push(points.back() + vector * float(i));
+			//}
 		}
 	}
 }
@@ -713,6 +713,11 @@ void ModelPart::readContourScreenPoint(std::vector<glm::vec3> &pointVector)
 	pointVector = screenPoints;
 }
 
+std::vector<glm::vec3>& ModelPart::getContourScreenPoint()
+{
+	return screenPoints;
+}
+
 bool ModelPart::isComputableContour(std::vector<glm::vec3> contourPoints)
 {
 	// reference https://www.ptt.cc/bbs/MATLAB/M.1297675543.A.40E.html
@@ -744,4 +749,14 @@ void ModelPart::SetTexture(GLuint textureID)
 	modelTexture = textureID;
 	clearStroke = true;
 	drawModelTexture = true;
+}
+
+void ModelPart::UpdateContourPoint(int pointID)
+{
+	if (pointID >= 0 && pointID < screenPoints.size()) {
+		points[pointID] = glm::unProject(screenPoints[pointID] * glm::vec3(1, 1, 0.5) + glm::vec3(0, 0, 0.5), mvp, glm::mat4(1), glm::vec4(-1, -1, 2, 2));
+	}
+	else {
+
+	}
 }

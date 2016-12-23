@@ -65,8 +65,10 @@ public:
 	float meshPointDistance(glm::vec3 point);
 	void readUVEdge(std::vector<glm::vec3> &uvVector);
 	void readContourScreenPoint(std::vector<glm::vec3> &pointVector);
+	std::vector<glm::vec3>& getContourScreenPoint();
 	void SetTexture(GLuint textureID);
 	GLuint getStrokeFBOTexture();
+	void UpdateContourPoint(int pointID = -1);
 
 	bool clearStroke;
 

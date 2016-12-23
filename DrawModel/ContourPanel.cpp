@@ -8,6 +8,7 @@ ContourPanel::ContourPanel()
 {
 	part = NULL;
 	zoom = 1;
+	selectPoint = -1;
 }
 
 ContourPanel::~ContourPanel()
@@ -49,8 +50,8 @@ void ContourPanel::Display()
 
 	if (!part)
 		return;
-	std::vector<glm::vec3> points;
-	part->readContourScreenPoint(points);
+	std::vector<glm::vec3> &points = part->getContourScreenPoint();
+	//part->readContourScreenPoint(points);
 	if (points.empty())
 		return;
 	glm::mat4 modelMat;
@@ -81,17 +82,41 @@ void ContourPanel::Display()
 
 void ContourPanel::MouseDown(int x, int y, int button)
 {
-
+	glm::vec2 screenPos((float)x / width * 2 - 1,(float)(height - y) / height * 2 - 1);
+	int nearestPoint = 0;
+	float nearestDistance = FLT_MAX;
+	std::vector<glm::vec3> &points = part->getContourScreenPoint();
+	for (int i = 0; i < points.size(); i++) {
+		float dist = glm::length(screenPos - glm::vec2(points[i]));
+		if (dist < nearestDistance) {
+			nearestPoint = i;
+			nearestDistance = dist;
+		}
+	}
+	if (nearestDistance < 0.05) {
+		selectPoint = nearestPoint;
+	}
+	else {
+		selectPoint = -1;
+	}
 }
 
 void ContourPanel::MouseUp(int x, int y, int button)
 {
-
+	if (selectPoint != -1) {
+		part->UpdateContourPoint(selectPoint);
+		selectPoint = -1;
+	}
 }
 
 void ContourPanel::MouseMove(int x, int y)
 {
-
+	if (selectPoint != -1) {
+		glm::vec2 screenPos((float)x / width * 2 - 1, (float)(height - y) / height * 2 - 1);
+		std::vector<glm::vec3> &points = part->getContourScreenPoint();
+		points[selectPoint].x = screenPos.x;
+		points[selectPoint].y = screenPos.y;
+	}
 }
 
 void ContourPanel::MouseWheel(int x, int y, int delta)

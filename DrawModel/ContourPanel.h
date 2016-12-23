@@ -28,5 +28,6 @@ private:
 		GLuint colorLocation;
 	} drawColor;
 	float zoom;
+	int selectPoint;
 };
 
