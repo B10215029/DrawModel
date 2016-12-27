@@ -28,6 +28,7 @@ public:
 	void Extrude(float thickness, int divisions, float offsetZ = 0.0f, float swellSize = 0.0f, float swellPower = 1.0f);
 	void Smooth(int steps = 3);
 	void ResetUV();
+	void ResetVertexUV();
 	void ComputeUV(VertexHandle vh = VertexHandle(0), OpenMesh::Vec2d centerUV = OpenMesh::Vec2d(0.5, 0.5));
 
 private:
@@ -36,6 +37,7 @@ private:
 	static OpenMesh::VPropHandleT<int> ringLevel;
 	static OpenMesh::VPropHandleT<int> parentCount;
 	static OpenMesh::VPropHandleT<OpenMesh::Vec2d> UVSum;
+	static OpenMesh::FPropHandleT<int> UVGroup;
 
 	void UpdateEdgeWeight();
 	double MeshArea();

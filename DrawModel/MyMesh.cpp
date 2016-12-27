@@ -14,6 +14,7 @@ OpenMesh::VPropHandleT<double> MyMesh::oneRingArea;
 OpenMesh::VPropHandleT<int> MyMesh::ringLevel;
 OpenMesh::VPropHandleT<int> MyMesh::parentCount;
 OpenMesh::VPropHandleT<OpenMesh::Vec2d> MyMesh::UVSum;
+OpenMesh::FPropHandleT<int> MyMesh::UVGroup;
 
 MyMesh::MyMesh()
 {
@@ -22,6 +23,7 @@ MyMesh::MyMesh()
 	add_property(UVSum);
 	add_property(ringLevel);
 	add_property(parentCount);
+	add_property(UVGroup);
 	hasExtraction = false;
 }
 
@@ -155,6 +157,13 @@ void MyMesh::LaplacianSmooth()
 
 void MyMesh::ResetUV()
 {
+	for (FaceIter f_it = faces_begin(); f_it != faces_end(); ++f_it) {
+		property(UVGroup, f_it) = -1;
+	}
+}
+
+void MyMesh::ResetVertexUV()
+{
 	OpenMesh::Vec2d zero(0, 0);
 	for (VertexIter v_it = vertices_begin(); v_it != vertices_end(); ++v_it) {
 		property(ringLevel, v_it) = -1;
@@ -172,75 +181,97 @@ glm::dvec3 MyMesh::PointToVec3(MyMesh::Point p) {
 
 void MyMesh::ComputeUV(VertexHandle vh, OpenMesh::Vec2d centerUV)
 {
-	glm::dvec3 p = PointToVec3(point(vh));
-	std::deque<VertexHandle> queue;
-	glm::dvec3 np = PointToVec3(normal(vh));
-	glm::dvec3 xp = glm::normalize(glm::cross(glm::dvec3(0, 1, 0), np));
-	glm::dvec3 yp = glm::normalize(glm::cross(np, xp));
-	set_texcoord2D(vh, centerUV);
-	property(ringLevel, vh) = 0;
-	queue.push_back(vh);
-	int i = 0;
-	while (!queue.empty()) {
-		VertexHandle currentVh = queue.front();
-		queue.pop_front();
-		//printf("%d: %lf, %lf\n", i++, texcoord2D(currentVh).data()[0], texcoord2D(currentVh).data()[1]);
-		glm::dvec3 nr = PointToVec3(normal(currentVh));
-		glm::dvec3 xr = glm::normalize(glm::cross(glm::dvec3(0, 1, 0), nr));
-		glm::dvec3 yr = glm::normalize(glm::cross(nr, xr));
-
-		double na = glm::angle(np, nr); // normal angle
-		//printf("na: %lf, %lf\n", glm::length(glm::rotate(nr, na, glm::cross(np, nr)) - np), glm::length(glm::rotate(nr, na, glm::cross(nr, np)) - np));
-		//if (glm::length(glm::rotate(nr, na, glm::cross(np, nr)) - np) > 0.000000001) {
-		//	printf("");
-		//}
-		glm::dvec3 xrp = glm::rotate(xr, na, glm::cross(nr, np));
-		double theta = glm::angle(xrp, xp);
-		//printf("theta: %lf, %lf, %d\n", glm::length(glm::rotate(xrp, theta, np) - xp), glm::length(glm::rotate(xrp, theta, -np) - xp), glm::dot(glm::cross(xrp, xp), np) > 0);
-		//if (glm::length(glm::rotate(xrp, theta, np) - xp) > 0.000000001) {
-		//	printf("");
-		//}
-		if (glm::dot(glm::cross(xrp, xp), np) < 0)
-			theta *= -1;
-		if (abs(glm::dot(np, nr) - 1) < 0.00001)
-			theta = 0;
-		//printf("na test: %lf, theta test: %lf, theta: %lf\n", glm::length(glm::rotate(nr, na, glm::cross(nr, np)) - np), glm::length((glm::rotate(xrp, theta, np)) - xp), theta);
-		//printf("rl: %lf, theta: %lf\n", rl, theta);
-		//printf("rl: %lf, theta: %lf\n", glm::degrees(na), glm::degrees(theta));
-
-		for (VertexVertexIter vv_it = vv_begin(currentVh); vv_it != vv_end(currentVh); ++vv_it) {
-			if (property(ringLevel, vv_it) != -1 && property(ringLevel, vv_it) < property(ringLevel, currentVh))
-				continue;
-			//glm::dvec3 p1 = PointToVec3(point(vv_it));
-			//glm::dvec3 p2 = PointToVec3(point(currentVh));
-			////if (glm::length(p1 - p) - glm::length(p2 - p) < 0.03)
-			////	continue;
-			//if (p1.y == p2.y)
-			//	continue;
-			glm::dvec3 v = PointToVec3(point(vv_it) - point(currentVh));
-			glm::dvec2 uv(glm::dot(v, xr), glm::dot(v, yr));
-			uv = glm::normalize(uv) * glm::length(v);
-			uv = glm::rotate(uv, -theta);
-			//OpenMesh::Vec2f texV = (texcoord2D(vv_it) * property(parentCount, vv_it) + OpenMesh::Vec2f(uv.x, uv.y) + texcoord2D(currentVh)) / (property(parentCount, vv_it) + 1);
-			property(UVSum, vv_it) += OpenMesh::Vec2f(uv.x, uv.y) + texcoord2D(currentVh);
-			property(parentCount, vv_it)++;
-			if (property(ringLevel, vv_it) == -1) {
-				queue.push_back(vv_it);
-				property(ringLevel, vv_it) = property(ringLevel, currentVh) + 1;
+	int okFace = 0;
+	int groupCount = 0;
+	double maxUVDistance = 0.5;
+	while (okFace != n_faces()) {
+		if (groupCount != 0) {
+			while (1) {
+				FaceHandle fh(rand() % n_faces());
+				if (property(UVGroup, fh) == -1) {
+					vh = fv_begin(fh).handle();
+					break;
+				}
 			}
-			set_texcoord2D(vv_it, property(UVSum, vv_it) / property(parentCount, vv_it));
-			//printf("ID: %03d, %03d, UV: %lf, %lf, %lf, LEVEL: %d, %d\n", currentVh.idx(), vv_it->idx(), (texV - OpenMesh::Vec2f(0.5, 0.5)).norm(), texV.data()[0], texV.data()[1], property(ringLevel, vv_it), property(parentCount, vv_it));
+			//for (FaceIter f_it = faces_begin(); f_it != faces_end(); ++f_it) {
+			//	if (property(UVGroup, f_it) == -1) {
+			//		vh = fv_begin(f_it).handle();
+			//	}
+			//}
 		}
-	}
+		ResetVertexUV();
+		glm::dvec3 p = PointToVec3(point(vh));
+		std::deque<VertexHandle> queue;
+		glm::dvec3 np = PointToVec3(normal(vh));
+		glm::dvec3 xp = glm::normalize(glm::cross(glm::dvec3(0, 1, 0), np));
+		glm::dvec3 yp = glm::normalize(glm::cross(np, xp));
+		set_texcoord2D(vh, centerUV);
+		property(ringLevel, vh) = 0;
+		queue.push_back(vh);
+		while (!queue.empty()) {
+			VertexHandle currentVh = queue.front();
+			queue.pop_front();
+			glm::dvec3 nr = PointToVec3(normal(currentVh));
+			glm::dvec3 xr = glm::normalize(glm::cross(glm::dvec3(0, 1, 0), nr));
+			glm::dvec3 yr = glm::normalize(glm::cross(nr, xr));
 
-	for (VertexIter v_it = vertices_begin(); v_it != vertices_end(); ++v_it) {
-		for (VertexIHalfedgeIter vhe_it = vih_begin(v_it); vhe_it != vih_end(v_it); ++vhe_it) {
-			set_texcoord2D(vhe_it, texcoord2D(v_it));
+			double na = glm::angle(np, nr); // normal angle
+			glm::dvec3 xrp = glm::rotate(xr, na, glm::cross(nr, np));
+			double theta = glm::angle(xrp, xp);
+			if (glm::dot(glm::cross(xrp, xp), np) < 0)
+				theta *= -1;
+			if (abs(glm::dot(np, nr) - 1) < 0.00001)
+				theta = 0;
+			
+			for (VertexVertexIter vv_it = vv_begin(currentVh); vv_it != vv_end(currentVh); ++vv_it) {
+				if (property(ringLevel, vv_it) != -1 && property(ringLevel, vv_it) < property(ringLevel, currentVh))
+					continue;
+				glm::dvec3 v = PointToVec3(point(vv_it) - point(currentVh));
+				glm::dvec2 uv(glm::dot(v, xr), glm::dot(v, yr));
+				uv = glm::normalize(uv) * glm::length(v);
+				uv = glm::rotate(uv, -theta);
+				property(UVSum, vv_it) += OpenMesh::Vec2f(uv.x, uv.y) + texcoord2D(currentVh);
+				property(parentCount, vv_it)++;
+				if (property(ringLevel, vv_it) == -1) {
+					queue.push_back(vv_it);
+					property(ringLevel, vv_it) = property(ringLevel, currentVh) + 1;
+				}
+				set_texcoord2D(vv_it, property(UVSum, vv_it) / property(parentCount, vv_it));
+			}
+		}
+		for (FaceIter f_it = faces_begin(); f_it != faces_end(); ++f_it) {
+			glm::dvec3 n = PointToVec3(normal(f_it));
+			bool isnan = false;
+			if (property(UVGroup, f_it) != -1 || glm::dot(np, n) <= 0.3)
+				continue;
+			for (FaceHalfedgeIter fh_it = fh_begin(f_it); fh_it != fh_end(f_it); ++fh_it) {
+				set_texcoord2D(fh_it, texcoord2D(to_vertex_handle(fh_it)));
+				if (std::isnan(texcoord2D(fh_it)[0]) || std::isnan(texcoord2D(fh_it)[1]))
+					isnan = true;
+				if (abs(texcoord2D(fh_it)[0] - 0.5) > maxUVDistance)
+					maxUVDistance = abs(texcoord2D(fh_it)[0] - 0.5);
+				if (abs(texcoord2D(fh_it)[1] - 0.5) > maxUVDistance)
+					maxUVDistance = abs(texcoord2D(fh_it)[1] - 0.5);
+			}
+			if (isnan)
+				break;
+			property(UVGroup, f_it) = groupCount;
+			okFace++;
+		}
+		groupCount++;
+	}
+	int uvwidth = ceil(sqrt(groupCount));
+	for (FaceIter f_it = faces_begin(); f_it != faces_end(); ++f_it) {
+		for (FaceHalfedgeIter fh_it = fh_begin(f_it); fh_it != fh_end(f_it); ++fh_it) {
+			OpenMesh::Vec2d oriUV = texcoord2D(fh_it);
+			OpenMesh::Vec2d scaUV = oriUV - OpenMesh::Vec2d(0.5, 0.5);
+			scaUV = scaUV / maxUVDistance / 2;
+			scaUV = scaUV + OpenMesh::Vec2d(0.5, 0.5);
+			OpenMesh::Vec2d offsetUV = (scaUV + OpenMesh::Vec2d(property(UVGroup, f_it) / uvwidth, property(UVGroup, f_it) % uvwidth)) / uvwidth;
+			set_texcoord2D(fh_it, offsetUV);
 		}
 	}
-	//for (HalfedgeIter he_it = halfedges_begin(); he_it != halfedges_end(); ++he_it) {
-	//	set_texcoord2D(he_it, OpenMesh::Vec2f((float)rand() / RAND_MAX, (float)rand() / RAND_MAX));
-	//}
+	printf("Compute UV OK, groupCount = %d, uvwidth = %d, maxUVDistance = %lf", groupCount, uvwidth, maxUVDistance);
 }
 
 void MyMesh::UpdateEdgeWeight()

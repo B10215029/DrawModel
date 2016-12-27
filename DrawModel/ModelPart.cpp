@@ -68,6 +68,7 @@ void ModelPart::SetStrokeTextureFromFile(const char* filePath)
 void ModelPart::SavePartsToOBJ(std::deque<ModelPart*> parts, const char* fileName)
 {
 	MyMesh mesh;
+	OpenMesh::IO::Options opt(OpenMesh::IO::Options::VertexNormal | OpenMesh::IO::Options::VertexTexCoord | OpenMesh::IO::Options::FaceTexCoord);
 	std::deque<MyMesh::VertexHandle> verts;
 	MyMesh::VertexHandle vh[3];
 	for (int i = 0; i < parts.size(); i++) {
@@ -76,6 +77,8 @@ void ModelPart::SavePartsToOBJ(std::deque<ModelPart*> parts, const char* fileNam
 		verts.clear();
 		for (MyMesh::VertexIter v_it = parts[i]->mesh->vertices_begin(); v_it != parts[i]->mesh->vertices_end(); ++v_it) {
 			verts.push_back(mesh.add_vertex(parts[i]->mesh->point(v_it)));
+			mesh.set_normal(verts.back(), parts[i]->mesh->normal(v_it));
+			mesh.set_texcoord2D(verts.back(), parts[i]->mesh->texcoord2D(v_it));
 		}
 		for (MyMesh::FaceIter f_it = parts[i]->mesh->faces_begin(); f_it != parts[i]->mesh->faces_end(); ++f_it) {
 			MyMesh::FaceVertexIter fv_it = parts[i]->mesh->fv_begin(f_it);
@@ -85,7 +88,7 @@ void ModelPart::SavePartsToOBJ(std::deque<ModelPart*> parts, const char* fileNam
 			mesh.add_face(vh, 3);
 		}
 	}
-	OpenMesh::IO::write_mesh(mesh, fileName);
+	OpenMesh::IO::write_mesh(mesh, fileName, opt);
 }
 
 ModelPart::ModelPart()
@@ -109,7 +112,7 @@ void ModelPart::Render()
 	if (state == ModelState::STATE_MODEL) {
 		RenderModel();
 		//RenderLine();
-		if (clearStroke) {
+		if (clearStroke || !strokePointQueue.empty()) {
 			RenderStroke();
 		}
 	}
@@ -312,8 +315,11 @@ GLuint ModelPart::getStrokeFBOTexture()
 
 void ModelPart::CreateMesh()
 {
-	if (!isComputableContour(screenPoints))
+	if (!isComputableContour(screenPoints)) {
+		state = ModelState::STATE_NONE;
+		mesh = NULL;
 		return;
+	}
 	printf("CreateMesh\n");
 	//mesh = MyMesh::CreateFace(points);
 	//mesh = Triangulation::CreateFace(&points[0], points.size(), triAspect, triSize);
@@ -497,9 +503,9 @@ void ModelPart::DrawPoint(glm::vec3 point)
 	MyMesh::TexCoord2D t[3];
 	double w[4] = {};
 	int i = 0, j = 2;
-	for (MyMesh::FaceVertexIter fv_it = mesh->fv_begin(nearestFace); fv_it != mesh->fv_end(nearestFace); ++fv_it) {
-		t[i] = mesh->texcoord2D(fv_it);
-		p[i++] = mesh->point(fv_it);
+	for (MyMesh::FaceHalfedgeIter fh_it = mesh->fh_begin(nearestFace); fh_it != mesh->fh_end(nearestFace); ++fh_it) {
+		t[i] = mesh->texcoord2D(fh_it);
+		p[i++] = mesh->point(mesh->to_vertex_handle(fh_it));
 	}
 	//for (i = 0, j = 2; i < 3; j = i++) {
 	//	int k = (i + 1) % 3;
@@ -552,11 +558,16 @@ void ModelPart::StartDraw(glm::vec3 point)
 	MyMesh::TexCoord2D t[3];
 	double w[4] = {};
 	int i = 0, j = 2;
-	for (MyMesh::FaceVertexIter fv_it = mesh->fv_begin(nearestFace); fv_it != mesh->fv_end(nearestFace); ++fv_it) {
-		t[i] = mesh->texcoord2D(fv_it);
-		p[i++] = mesh->point(fv_it);
-		printf("FaceVertexI: %lf, %lf, %lf\n", mesh->point(fv_it)[0], mesh->point(fv_it)[1], mesh->point(fv_it)[2]);
+	for (MyMesh::FaceHalfedgeIter fh_it = mesh->fh_begin(nearestFace); fh_it != mesh->fh_end(nearestFace); ++fh_it) {
+		t[i] = mesh->texcoord2D(fh_it);
+		p[i++] = mesh->point(mesh->to_vertex_handle(fh_it));
+		//printf("FaceVertexI: %lf, %lf, %lf\n", mesh->point(fv_it)[0], mesh->point(fv_it)[1], mesh->point(fv_it)[2]);
 	}
+	//for (MyMesh::FaceVertexIter fv_it = mesh->fv_begin(nearestFace); fv_it != mesh->fv_end(nearestFace); ++fv_it) {
+	//	t[i] = mesh->texcoord2D(fv_it);
+	//	p[i++] = mesh->point(fv_it);
+	//	printf("FaceVertexI: %lf, %lf, %lf\n", mesh->point(fv_it)[0], mesh->point(fv_it)[1], mesh->point(fv_it)[2]);
+	//}
 	//for (i = 0, j = 2; i < 3; j = i++) {
 	//	int k = (i + 1) % 3;
 	//	double tria = TriangleArea(p[i], p[j], pointP);
