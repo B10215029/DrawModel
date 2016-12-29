@@ -94,6 +94,7 @@ void ModelPart::SavePartsToOBJ(std::deque<ModelPart*> parts, const char* fileNam
 ModelPart::ModelPart()
 {
 	mesh = NULL;
+	planeMesh = NULL;
 	mvp = projectionMatrix * viewMatrix * modelMatrix;
 	clearStroke = false;
 	drawModelTexture = false;
@@ -101,6 +102,7 @@ ModelPart::ModelPart()
 	strokeTextureUV = 0;
 	strokeFBOTextureExpired = false;
 	strokeFBOTextureData = NULL;
+	invalidateBuffer = false;
 }
 
 ModelPart::~ModelPart()
@@ -110,6 +112,8 @@ ModelPart::~ModelPart()
 void ModelPart::Render()
 {
 	if (state == ModelState::STATE_MODEL) {
+		if (invalidateBuffer)
+			UpdateMeshBuffer();
 		RenderModel();
 		//RenderLine();
 		if (clearStroke || !strokePointQueue.empty()) {
@@ -323,7 +327,9 @@ void ModelPart::CreateMesh()
 	printf("CreateMesh\n");
 	//mesh = MyMesh::CreateFace(points);
 	//mesh = Triangulation::CreateFace(&points[0], points.size(), triAspect, triSize);
-	mesh = Triangulation::CreateFace(points, mvp, triAspect, triSize);
+	planeMesh = Triangulation::CreateFace(points, mvp, triAspect, triSize);
+	mesh = new MyMesh();
+	*mesh = *planeMesh;
 	OpenMesh::Vec3d avg(0, 0, 0);
 	int bpc = 0;
 	for (MyMesh::VertexIter v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it) {
@@ -363,6 +369,37 @@ void ModelPart::CreateMesh()
 	mesh->ResetUV();
 	mesh->ComputeUV(minvh);
 	//mesh->LaplacianSmooth();
+}
+
+void ModelPart::ReExtrude()
+{
+	if (!planeMesh) {
+		return;
+	}
+	mesh = new MyMesh();
+	*mesh = *planeMesh;
+	OpenMesh::Vec3d avg(0, 0, 0);
+	int bpc = 0;
+	for (MyMesh::VertexIter v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it) {
+		if (mesh->is_boundary(v_it)) {
+			avg += mesh->point(v_it);
+			bpc++;
+		}
+	}
+	avg /= bpc;
+	MyMesh::VertexHandle minvh(0);
+	float mindis = FLT_MAX;
+	for (MyMesh::VertexIter v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it) {
+		if ((mesh->point(v_it) - avg).norm() < mindis) {
+			minvh = v_it;
+			mindis = (mesh->point(v_it) - avg).norm();
+		}
+	}
+	mesh->Extrude(extrudeThickness, extrudeDivisions, extrudeOffset, swellSize, swellPower);
+	state = ModelState::STATE_MODEL;
+
+	mesh->ResetUV();
+	mesh->ComputeUV(minvh);
 }
 
 void ModelPart::ReadMesh(const char* fileName)
@@ -770,4 +807,28 @@ void ModelPart::UpdateContourPoint(int pointID)
 	else {
 
 	}
+}
+
+MyMesh ModelPart::GetPlane()
+{
+	if (!planeMesh)
+		return MyMesh();
+	MyMesh mesh = *planeMesh;
+	for (MyMesh::VertexIter vh = mesh.vertices_begin(); vh != mesh.vertices_end(); ++vh) {
+		MyMesh::Point& p = mesh.point(vh);
+		glm::vec4 np = mvp * glm::vec4(p[0], p[1], p[2], 1);
+		mesh.point(vh) = MyMesh::Point(np.x / np.w, np.y / np.w, np.z / np.w);
+	}
+	return mesh;
+}
+
+void ModelPart::SetPlane(MyMesh mesh)
+{
+	glm::mat4 invMvp = glm::inverse(mvp);
+	for (MyMesh::VertexIter vh = mesh.vertices_begin(); vh != mesh.vertices_end(); ++vh) {
+		MyMesh::Point& p = mesh.point(vh);
+		glm::vec4 np = invMvp * glm::vec4(p[0], p[1], p[2], 1);
+		mesh.point(vh) = MyMesh::Point(np.x / np.w, np.y / np.w, np.z / np.w);
+	}
+	*planeMesh = mesh;
 }

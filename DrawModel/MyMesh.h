@@ -29,7 +29,7 @@ public:
 	void Smooth(int steps = 3);
 	void ResetUV();
 	void ResetVertexUV();
-	void ComputeUV(VertexHandle vh = VertexHandle(0), OpenMesh::Vec2d centerUV = OpenMesh::Vec2d(0.5, 0.5));
+	void ComputeUV(VertexHandle vh = VertexHandle(-1), OpenMesh::Vec2d centerUV = OpenMesh::Vec2d(0.5, 0.5));
 
 private:
 	static OpenMesh::EPropHandleT<double> edgeWeight;

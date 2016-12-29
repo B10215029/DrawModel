@@ -55,6 +55,7 @@ public:
 	void EndDraw();
 	void CreateFrameBuffer(int width, int height);
 	void CreateMesh();
+	void ReExtrude();
 	void ReadMesh(const char* fileName);
 	void UpdateMeshBuffer();
 	void ExtractionMesh(float s);
@@ -69,8 +70,11 @@ public:
 	void SetTexture(GLuint textureID);
 	GLuint getStrokeFBOTexture();
 	void UpdateContourPoint(int pointID = -1);
+	MyMesh GetPlane();
+	void SetPlane(MyMesh mesh);
 
 	bool clearStroke;
+	bool invalidateBuffer;
 
 private:
 	static bool isComputableContour(std::vector<glm::vec3> contourPoints);
@@ -113,6 +117,7 @@ private:
 	float maxPointDist;
 	ModelState state;
 	MyMesh* mesh;
+	MyMesh* planeMesh;
 	GLuint strokeFBO;
 	GLuint strokeFBOColorTexture;
 	GLuint modelTexture;

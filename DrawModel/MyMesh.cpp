@@ -184,8 +184,9 @@ void MyMesh::ComputeUV(VertexHandle vh, OpenMesh::Vec2d centerUV)
 	int okFace = 0;
 	int groupCount = 0;
 	double maxUVDistance = 0.5;
-	while (okFace != n_faces()) {
-		if (groupCount != 0) {
+	int i = 0;
+	while (okFace != n_faces() && i < 100) {
+		if (groupCount != 0 || !vh.is_valid()) {
 			while (1) {
 				FaceHandle fh(rand() % n_faces());
 				if (property(UVGroup, fh) == -1) {
@@ -242,7 +243,7 @@ void MyMesh::ComputeUV(VertexHandle vh, OpenMesh::Vec2d centerUV)
 		for (FaceIter f_it = faces_begin(); f_it != faces_end(); ++f_it) {
 			glm::dvec3 n = PointToVec3(normal(f_it));
 			bool isnan = false;
-			if (property(UVGroup, f_it) != -1 || glm::dot(np, n) <= 0.3)
+			if (property(UVGroup, f_it) != -1 || glm::dot(np, n) <= 0.0)
 				continue;
 			for (FaceHalfedgeIter fh_it = fh_begin(f_it); fh_it != fh_end(f_it); ++fh_it) {
 				set_texcoord2D(fh_it, texcoord2D(to_vertex_handle(fh_it)));
@@ -259,6 +260,7 @@ void MyMesh::ComputeUV(VertexHandle vh, OpenMesh::Vec2d centerUV)
 			okFace++;
 		}
 		groupCount++;
+		i++;
 	}
 	int uvwidth = ceil(sqrt(groupCount));
 	for (FaceIter f_it = faces_begin(); f_it != faces_end(); ++f_it) {
@@ -271,7 +273,7 @@ void MyMesh::ComputeUV(VertexHandle vh, OpenMesh::Vec2d centerUV)
 			set_texcoord2D(fh_it, offsetUV);
 		}
 	}
-	printf("Compute UV OK, groupCount = %d, uvwidth = %d, maxUVDistance = %lf", groupCount, uvwidth, maxUVDistance);
+	printf("Compute UV OK, groupCount = %d, uvwidth = %d, maxUVDistance = %lf\n", groupCount, uvwidth, maxUVDistance);
 }
 
 void MyMesh::UpdateEdgeWeight()
@@ -439,7 +441,6 @@ void MyMesh::Extrude(float thickness, int divisions, float offsetZ, float swellS
 	}
 
 	update_normals();
-	OpenMesh::IO::write_mesh(*this, "test2.obj");
 }
 
 void MyMesh::Smooth(int steps)

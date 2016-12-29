@@ -4,6 +4,7 @@
 #include "ModelPart.h"
 #include "UVForm.h"
 #include "ContourForm.h"
+#include "ARAPForm.h"
 
 namespace DrawModel {
 
@@ -163,6 +164,7 @@ private: System::Windows::Forms::Button^  button15;
 private: System::Windows::Forms::Button^  button16;
 private: System::Windows::Forms::TextBox^  textBox12;
 		 ContourForm contourForm;
+		 ARAPForm aRAPForm;
 
 
 #pragma region Windows Form Designer generated code
@@ -208,11 +210,12 @@ private: System::Windows::Forms::TextBox^  textBox12;
 			this->tabPage3 = (gcnew System::Windows::Forms::TabPage());
 			this->tableLayoutPanel6 = (gcnew System::Windows::Forms::TableLayoutPanel());
 			this->button3 = (gcnew System::Windows::Forms::Button());
-			this->textBox8 = (gcnew System::Windows::Forms::TextBox());
-			this->textBox9 = (gcnew System::Windows::Forms::TextBox());
 			this->button4 = (gcnew System::Windows::Forms::Button());
 			this->button15 = (gcnew System::Windows::Forms::Button());
 			this->button16 = (gcnew System::Windows::Forms::Button());
+			this->textBox8 = (gcnew System::Windows::Forms::TextBox());
+			this->textBox9 = (gcnew System::Windows::Forms::TextBox());
+			this->textBox12 = (gcnew System::Windows::Forms::TextBox());
 			this->tabPage4 = (gcnew System::Windows::Forms::TabPage());
 			this->tableLayoutPanel9 = (gcnew System::Windows::Forms::TableLayoutPanel());
 			this->label14 = (gcnew System::Windows::Forms::Label());
@@ -239,7 +242,6 @@ private: System::Windows::Forms::TextBox^  textBox12;
 			this->button14 = (gcnew System::Windows::Forms::Button());
 			this->colorDialog1 = (gcnew System::Windows::Forms::ColorDialog());
 			this->openFileDialog1 = (gcnew System::Windows::Forms::OpenFileDialog());
-			this->textBox12 = (gcnew System::Windows::Forms::TextBox());
 			this->tableLayoutPanel1->SuspendLayout();
 			this->tableLayoutPanel2->SuspendLayout();
 			this->groupBox1->SuspendLayout();
@@ -702,24 +704,6 @@ private: System::Windows::Forms::TextBox^  textBox12;
 			this->button3->UseVisualStyleBackColor = true;
 			this->button3->Click += gcnew System::EventHandler(this, &MainForm::button3_Click);
 			// 
-			// textBox8
-			// 
-			this->textBox8->Dock = System::Windows::Forms::DockStyle::Fill;
-			this->textBox8->Location = System::Drawing::Point(63, 3);
-			this->textBox8->Name = L"textBox8";
-			this->textBox8->Size = System::Drawing::Size(55, 22);
-			this->textBox8->TabIndex = 2;
-			this->textBox8->Text = L"2";
-			// 
-			// textBox9
-			// 
-			this->textBox9->Dock = System::Windows::Forms::DockStyle::Fill;
-			this->textBox9->Location = System::Drawing::Point(63, 32);
-			this->textBox9->Name = L"textBox9";
-			this->textBox9->Size = System::Drawing::Size(55, 22);
-			this->textBox9->TabIndex = 3;
-			this->textBox9->Text = L"3";
-			// 
 			// button4
 			// 
 			this->button4->Dock = System::Windows::Forms::DockStyle::Fill;
@@ -752,6 +736,33 @@ private: System::Windows::Forms::TextBox^  textBox12;
 			this->button16->Text = L"update UV";
 			this->button16->UseVisualStyleBackColor = true;
 			this->button16->Click += gcnew System::EventHandler(this, &MainForm::button16_Click);
+			// 
+			// textBox8
+			// 
+			this->textBox8->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->textBox8->Location = System::Drawing::Point(63, 3);
+			this->textBox8->Name = L"textBox8";
+			this->textBox8->Size = System::Drawing::Size(55, 22);
+			this->textBox8->TabIndex = 2;
+			this->textBox8->Text = L"2";
+			// 
+			// textBox9
+			// 
+			this->textBox9->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->textBox9->Location = System::Drawing::Point(63, 32);
+			this->textBox9->Name = L"textBox9";
+			this->textBox9->Size = System::Drawing::Size(55, 22);
+			this->textBox9->TabIndex = 3;
+			this->textBox9->Text = L"3";
+			// 
+			// textBox12
+			// 
+			this->textBox12->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->textBox12->Location = System::Drawing::Point(63, 90);
+			this->textBox12->Name = L"textBox12";
+			this->textBox12->Size = System::Drawing::Size(55, 22);
+			this->textBox12->TabIndex = 7;
+			this->textBox12->Text = L"0";
 			// 
 			// tabPage4
 			// 
@@ -1081,15 +1092,6 @@ private: System::Windows::Forms::TextBox^  textBox12;
 			// 
 			this->openFileDialog1->FileName = L"openFileDialog1";
 			// 
-			// textBox12
-			// 
-			this->textBox12->Dock = System::Windows::Forms::DockStyle::Fill;
-			this->textBox12->Location = System::Drawing::Point(63, 90);
-			this->textBox12->Name = L"textBox12";
-			this->textBox12->Size = System::Drawing::Size(55, 22);
-			this->textBox12->TabIndex = 7;
-			this->textBox12->Text = L"0";
-			// 
 			// MainForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 12);
@@ -1302,22 +1304,19 @@ private: System::Void button9_Click(System::Object^  sender, System::EventArgs^ 
 	drawPanel->operateMode = DrawPanel::OperateMode::DrawMode;
 }
 private: System::Void button10_Click(System::Object^  sender, System::EventArgs^  e) {
-	button7->BackColor = System::Drawing::SystemColors::Control;
-	button8->BackColor = System::Drawing::SystemColors::Control;
-	button9->BackColor = System::Drawing::SystemColors::Control;
-	button10->BackColor = System::Drawing::SystemColors::Control;
-	button10->BackColor = System::Drawing::Color::Yellow;
-	drawPanel->operateMode = DrawPanel::OperateMode::DeformationMode;
+	aRAPForm.Show();
 }
 private: System::Void listBox1_SelectedIndexChanged(System::Object^  sender, System::EventArgs^  e) {
 	drawPanel->selectPart = listBox1->SelectedIndex;
 	if (drawPanel->selectPart != -1) {
 		uvForm.SetModelPart(drawPanel->parts[drawPanel->selectPart]);
 		contourForm.SetModelPart(drawPanel->parts[drawPanel->selectPart]);
+		aRAPForm.SetModelPart(drawPanel->parts[drawPanel->selectPart]);
 	}
 	else {
 		uvForm.SetModelPart(NULL);
 		contourForm.SetModelPart(NULL);
+		aRAPForm.SetModelPart(NULL);
 	}
 }
 private: System::Void button11_Click(System::Object^  sender, System::EventArgs^  e) {

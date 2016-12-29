@@ -131,6 +131,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ARAPForm.cpp" />
+    <ClCompile Include="ARAPPanel.cpp" />
     <ClCompile Include="ContourForm.cpp" />
     <ClCompile Include="ContourPanel.cpp" />
     <ClCompile Include="DrawPanel.cpp" />
@@ -144,6 +146,10 @@
     <ClCompile Include="UVPanel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ARAPForm.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="ARAPPanel.h" />
     <ClInclude Include="ContourForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
@@ -170,6 +176,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="ARAPForm.resx">
+      <DependentUpon>ARAPForm.h</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ContourForm.resx">
       <DependentUpon>ContourForm.h</DependentUpon>
     </EmbeddedResource>
