@@ -112,8 +112,10 @@ ModelPart::~ModelPart()
 void ModelPart::Render()
 {
 	if (state == ModelState::STATE_MODEL) {
-		if (invalidateBuffer)
+		if (invalidateBuffer) {
 			UpdateMeshBuffer();
+			invalidateBuffer = false;
+		}
 		RenderModel();
 		//RenderLine();
 		if (clearStroke || !strokePointQueue.empty()) {

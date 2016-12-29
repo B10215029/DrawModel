@@ -45,6 +45,8 @@ void ARAPPanel::Display()
 		return;
 	if (facePointSet.size() == 0)
 		SetPart(part);
+	if (facePointSet.size() == 0)
+		return;
 	glm::mat4 modelMat;
 	modelMat = glm::scale(glm::mat4(1), glm::vec3(1.0 / zoom, 1.0 / zoom, 1));
 
