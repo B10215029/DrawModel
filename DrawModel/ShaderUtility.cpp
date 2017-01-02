@@ -268,3 +268,82 @@ unsigned char* writeTextureToArray(GLuint textureID)
 	glBindTexture(GL_TEXTURE_2D, 0);
 	return data;
 }
+
+void writeTextureToFilePNG(const char* filePath, GLuint textureID)
+{
+	int width, height;
+	png_byte color_type = PNG_COLOR_TYPE_RGBA;
+	png_byte bit_depth = 8;
+
+	png_structp png_ptr;
+	png_infop info_ptr;
+	int number_of_passes = 1;
+	png_bytep * row_pointers;
+
+	GLint textureFormat;
+
+	glBindTexture(GL_TEXTURE_2D, textureID);
+	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &textureFormat);
+	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+
+	color_type = (textureFormat == GL_RGB8 ? PNG_COLOR_TYPE_RGB : PNG_COLOR_TYPE_RGBA);
+	row_pointers = (png_bytep*)malloc(sizeof(unsigned char*) * height);
+	row_pointers[height - 1] = (png_bytep)malloc(sizeof(unsigned char) * (textureFormat == GL_RGB8 ? 3 : 4) * width * height);
+	glGetTexImage(GL_TEXTURE_2D, 0, (textureFormat == GL_RGB8 ? GL_RGB : GL_RGBA), GL_UNSIGNED_BYTE, row_pointers[height - 1]);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	for (int y = 0; y<height; y++)
+		row_pointers[height - 1 - y] = row_pointers[height - 1] + (y * (textureFormat == GL_RGB8 ? 3 : 4) * width);
+
+	/* create file */
+	FILE *fp = fopen(filePath, "wb");
+	if (!fp)
+		printf("[write_png_file] File %s could not be opened for writing", filePath);
+
+
+	/* initialize stuff */
+	png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+
+	if (!png_ptr)
+		printf("[write_png_file] png_create_write_struct failed");
+
+	info_ptr = png_create_info_struct(png_ptr);
+	if (!info_ptr)
+		printf("[write_png_file] png_create_info_struct failed");
+
+	if (setjmp(png_jmpbuf(png_ptr)))
+		printf("[write_png_file] Error during init_io");
+
+	png_init_io(png_ptr, fp);
+
+
+	/* write header */
+	if (setjmp(png_jmpbuf(png_ptr)))
+		printf("[write_png_file] Error during writing header");
+
+	png_set_IHDR(png_ptr, info_ptr, width, height,
+		bit_depth, color_type, PNG_INTERLACE_NONE,
+		PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+
+	png_write_info(png_ptr, info_ptr);
+
+
+	/* write bytes */
+	if (setjmp(png_jmpbuf(png_ptr)))
+		printf("[write_png_file] Error during writing bytes");
+
+	png_write_image(png_ptr, row_pointers);
+
+
+	/* end write */
+	if (setjmp(png_jmpbuf(png_ptr)))
+		printf("[write_png_file] Error during end of write");
+
+	png_write_end(png_ptr, NULL);
+
+	/* cleanup heap allocation */
+	free(row_pointers[height - 1]);
+	free(row_pointers);
+
+	fclose(fp);
+}

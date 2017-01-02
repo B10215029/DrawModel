@@ -9,7 +9,6 @@ DrawPanel::DrawPanel()
 	zNear = 0.1;
 	zFar = 100;
 	SetView(ViewDirection::ResetView);
-	points.clear();
 	ModelPart::modelMatrix = glm::mat4(1.0f);
 	ModelPart::viewMatrix = glm::translate(glm::mat4(1.0f), transform);
 	ModelPart::projectionMatrix = glm::mat4(1.0f);
@@ -368,4 +367,22 @@ void DrawPanel::ClearModelStroke()
 	if (selectPart != -1) {
 		parts[selectPart]->clearStroke = true;
 	}
+}
+
+void DrawPanel::SavePart(int id, const char* fileName)
+{
+	if (selectPart != -1) {
+		BindGL();
+		parts[selectPart]->SavePart(fileName);
+		ReleaseGL();
+	}
+}
+
+void DrawPanel::ReadPart(const char* fileName)
+{
+	BindGL();
+	parts.push_back(new ModelPart());
+	parts.back()->ReadPart(fileName);
+	selectPart = parts.size() - 1;
+	ReleaseGL();
 }

@@ -51,6 +51,8 @@ public:
 	void LoadModel(const char* fileName);
 	void LoadModelTexture(const char* fileName);
 	void ClearModelStroke();
+	void SavePart(int id, const char* fileName);
+	void ReadPart(const char* fileName);
 
 	bool cleanStroke;
 	glm::vec3 transform;
@@ -61,22 +63,5 @@ public:
 
 private:
 	glm::ivec2 previousMousePosition;
-	//glm::mat4 modelMatrix;
-	//glm::mat4 viewMatrix;
-	//glm::mat4 projectionMatrix;
 	float zoom, zNear, zFar, zDraw;
-	GLuint program;
-	GLuint modelMatrixLocation;
-	GLuint viewMatrixLocation;
-	GLuint projectionMatrixLocation;
-	GLuint fboTextureLocation;
-
-	GLuint strokeProgram;
-	GLuint strokeTextureLocation;
-	GLuint strokeColorLocation;
-	GLuint strokeFBO;
-	GLuint strokeFBOColorTexture;
-	GLuint strokeTextureHandle;
-	std::vector<glm::vec3> points;
-	std::vector<glm::vec3> pointQueue;
 };

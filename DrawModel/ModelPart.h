@@ -72,6 +72,8 @@ public:
 	void UpdateContourPoint(int pointID = -1);
 	MyMesh GetPlane();
 	void SetPlane(MyMesh mesh);
+	void SavePart(const char* fileName);
+	void ReadPart(const char* fileName);
 
 	bool clearStroke;
 	bool invalidateBuffer;

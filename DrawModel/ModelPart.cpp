@@ -834,3 +834,150 @@ void ModelPart::SetPlane(MyMesh mesh)
 	}
 	*planeMesh = mesh;
 }
+
+void ModelPart::SavePart(const char* fileName)
+{
+	std::ofstream file(fileName, std::ofstream::out | std::ofstream::binary);
+	file.write((const char*)&vertexCount, sizeof(int));
+	file.write((const char*)&faceCount, sizeof(int));
+	file.write((const char*)&maxPointDist, sizeof(float));
+	file.write((const char*)&state, sizeof(ModelState));
+
+	file.write((const char*)&mvp, sizeof(glm::mat4));
+	file.write((const char*)&drawingPoint, sizeof(glm::vec3));
+	file.write((const char*)&strokeFBOTextureWidth, sizeof(int));
+	file.write((const char*)&strokeFBOTextureHeight, sizeof(int));
+
+	int pointSize = points.size();
+	file.write((const char*)&pointSize, sizeof(int));
+	file.write((const char*)&points[0], sizeof(glm::vec3) * pointSize);
+
+	int screenPointSize = screenPoints.size();
+	file.write((const char*)&screenPointSize, sizeof(int));
+	file.write((const char*)&screenPoints[0], sizeof(glm::vec3) * screenPointSize);
+
+	if (strokeFBOTextureData)
+		free(strokeFBOTextureData);
+	strokeFBOTextureData = writeTextureToArray(strokeFBOColorTexture);
+	file.write((const char*)strokeFBOTextureData, sizeof(unsigned char) * strokeFBOTextureWidth * strokeFBOTextureHeight * 4);
+
+	if (mesh) {
+		int vertexSize = mesh->n_vertices();
+		file.write((char*)&vertexSize, sizeof(int));
+		for (int i = 0; i < vertexSize; i++) {
+			file.write((char*)&mesh->point(MyMesh::VertexHandle(i)), sizeof(MyMesh::Point));
+			file.write((char*)&mesh->normal(MyMesh::VertexHandle(i)), sizeof(MyMesh::Normal));
+		}
+		int faceSize = mesh->n_faces();
+		file.write((char*)&faceSize, sizeof(int));
+		for (MyMesh::FaceIter f_it = mesh->faces_begin(); f_it != mesh->faces_end(); ++f_it) {
+			for (MyMesh::FaceVertexIter fv_it = mesh->fv_begin(f_it); fv_it != mesh->fv_end(f_it); ++fv_it) {
+				int id = fv_it->idx();
+				file.write((char*)&id, sizeof(int));
+			}
+		}
+		int halfEdgeSize = mesh->n_halfedges();
+		file.write((char*)&halfEdgeSize, sizeof(int));
+		for (MyMesh::HalfedgeIter he_it = mesh->halfedges_begin(); he_it != mesh->halfedges_end(); ++he_it) {
+			file.write((char*)&mesh->texcoord2D(he_it), sizeof(MyMesh::TexCoord2D));
+		}
+	}
+
+	if (planeMesh) {
+		int vertexSize = planeMesh->n_vertices();
+		file.write((char*)&vertexSize, sizeof(int));
+		for (int i = 0; i < vertexSize; i++) {
+			file.write((char*)&planeMesh->point(MyMesh::VertexHandle(i)), sizeof(MyMesh::Point));
+			file.write((char*)&planeMesh->normal(MyMesh::VertexHandle(i)), sizeof(MyMesh::Normal));
+		}
+		int faceSize = planeMesh->n_faces();
+		file.write((char*)&faceSize, sizeof(int));
+		for (MyMesh::FaceIter f_it = planeMesh->faces_begin(); f_it != planeMesh->faces_end(); ++f_it) {
+			for (MyMesh::FaceVertexIter fv_it = planeMesh->fv_begin(f_it); fv_it != planeMesh->fv_end(f_it); ++fv_it) {
+				int id = fv_it->idx();
+				file.write((char*)&id, sizeof(int));
+			}
+		}
+	}
+
+	file.close();
+}
+
+void ModelPart::ReadPart(const char* fileName)
+{
+	std::ifstream file(fileName, std::ofstream::in | std::ofstream::binary);
+	file.read((char*)&vertexCount, sizeof(int));
+	file.read((char*)&faceCount, sizeof(int));
+	file.read((char*)&maxPointDist, sizeof(float));
+	file.read((char*)&state, sizeof(ModelState));
+
+	file.read((char*)&mvp, sizeof(glm::mat4));
+	file.read((char*)&drawingPoint, sizeof(glm::vec3));
+	file.read((char*)&strokeFBOTextureWidth, sizeof(int));
+	file.read((char*)&strokeFBOTextureHeight, sizeof(int));
+
+	int pointSize = points.size();
+	file.read((char*)&pointSize, sizeof(int));
+	points.resize(pointSize);
+	file.read((char*)&points[0], sizeof(glm::vec3) * pointSize);
+
+	int screenPointSize = screenPoints.size();
+	file.read((char*)&screenPointSize, sizeof(int));
+	screenPoints.resize(screenPointSize);
+	file.read((char*)&screenPoints[0], sizeof(glm::vec3) * screenPointSize);
+
+	GLubyte *textureData = new unsigned char[strokeFBOTextureWidth * strokeFBOTextureHeight * 4];
+	file.read((char*)textureData, sizeof(unsigned char) * strokeFBOTextureWidth * strokeFBOTextureHeight * 4);
+	//CreateMesh();
+	if (!file.eof()) {
+		mesh = new MyMesh();
+		int vertexSize;
+		file.read((char*)&vertexSize, sizeof(int));
+		MyMesh::Point p;
+		MyMesh::Normal n;
+		for (int i = 0; i < vertexSize; i++) {
+			file.read((char*)&p, sizeof(MyMesh::Point));
+			file.read((char*)&n, sizeof(MyMesh::Normal));
+			mesh->set_normal(mesh->add_vertex(p), n);
+		}
+		int faceSize;
+		file.read((char*)&faceSize, sizeof(int));
+		int vid[3];
+		for (int i = 0; i < faceSize; i++) {
+			file.read((char*)&vid, sizeof(int) * 3);
+			mesh->add_face(MyMesh::VertexHandle(vid[0]), MyMesh::VertexHandle(vid[1]), MyMesh::VertexHandle(vid[2]));
+		}
+		int halfEdgeSize;
+		file.read((char*)&halfEdgeSize, sizeof(int));
+		MyMesh::TexCoord2D t;
+		for (int i = 0; i < halfEdgeSize; i++) {
+			file.read((char*)&t, sizeof(MyMesh::TexCoord2D));
+			mesh->set_texcoord2D(MyMesh::HalfedgeHandle(i), t);
+		}
+	}
+
+	if (!file.eof()) {
+		planeMesh = new MyMesh();
+		int vertexSize;
+		file.read((char*)&vertexSize, sizeof(int));
+		MyMesh::Point p;
+		MyMesh::Normal n;
+		for (int i = 0; i < vertexSize; i++) {
+			file.read((char*)&p, sizeof(MyMesh::Point));
+			file.read((char*)&n, sizeof(MyMesh::Normal));
+			planeMesh->set_normal(planeMesh->add_vertex(p), n);
+		}
+		int faceSize;
+		file.read((char*)&faceSize, sizeof(int));
+		int vid[3];
+		for (int i = 0; i < faceSize; i++) {
+			file.read((char*)&vid, sizeof(int) * 3);
+			planeMesh->add_face(MyMesh::VertexHandle(vid[0]), MyMesh::VertexHandle(vid[1]), MyMesh::VertexHandle(vid[2]));
+		}
+	}
+
+	CreateFrameBuffer(strokeFBOTextureWidth, strokeFBOTextureHeight);
+	SetTexture(loadTextureFromArray(textureData, strokeFBOTextureWidth, strokeFBOTextureHeight, 4));
+	
+	invalidateBuffer = true;
+}
