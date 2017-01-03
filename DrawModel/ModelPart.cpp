@@ -838,28 +838,24 @@ void ModelPart::SetPlane(MyMesh mesh)
 void ModelPart::SavePart(const char* fileName)
 {
 	std::ofstream file(fileName, std::ofstream::out | std::ofstream::binary);
-	file.write((const char*)&vertexCount, sizeof(int));
-	file.write((const char*)&faceCount, sizeof(int));
-	file.write((const char*)&maxPointDist, sizeof(float));
 	file.write((const char*)&state, sizeof(ModelState));
-
 	file.write((const char*)&mvp, sizeof(glm::mat4));
-	file.write((const char*)&drawingPoint, sizeof(glm::vec3));
 	file.write((const char*)&strokeFBOTextureWidth, sizeof(int));
 	file.write((const char*)&strokeFBOTextureHeight, sizeof(int));
 
 	int pointSize = points.size();
 	file.write((const char*)&pointSize, sizeof(int));
-	file.write((const char*)&points[0], sizeof(glm::vec3) * pointSize);
+	if (pointSize != 0)
+		file.write((const char*)&points[0], sizeof(glm::vec3) * pointSize);
 
 	int screenPointSize = screenPoints.size();
 	file.write((const char*)&screenPointSize, sizeof(int));
-	file.write((const char*)&screenPoints[0], sizeof(glm::vec3) * screenPointSize);
+	if (screenPointSize != 0)
+		file.write((const char*)&screenPoints[0], sizeof(glm::vec3) * screenPointSize);
 
-	if (strokeFBOTextureData)
-		free(strokeFBOTextureData);
-	strokeFBOTextureData = writeTextureToArray(strokeFBOColorTexture);
-	file.write((const char*)strokeFBOTextureData, sizeof(unsigned char) * strokeFBOTextureWidth * strokeFBOTextureHeight * 4);
+	GLubyte *textureData = writeTextureToArray(strokeFBOColorTexture);
+	file.write((const char*)textureData, sizeof(unsigned char) * strokeFBOTextureWidth * strokeFBOTextureHeight * 4);
+	free(textureData);
 
 	if (mesh) {
 		int vertexSize = mesh->n_vertices();
@@ -906,29 +902,28 @@ void ModelPart::SavePart(const char* fileName)
 void ModelPart::ReadPart(const char* fileName)
 {
 	std::ifstream file(fileName, std::ofstream::in | std::ofstream::binary);
-	file.read((char*)&vertexCount, sizeof(int));
-	file.read((char*)&faceCount, sizeof(int));
-	file.read((char*)&maxPointDist, sizeof(float));
 	file.read((char*)&state, sizeof(ModelState));
-
 	file.read((char*)&mvp, sizeof(glm::mat4));
-	file.read((char*)&drawingPoint, sizeof(glm::vec3));
 	file.read((char*)&strokeFBOTextureWidth, sizeof(int));
 	file.read((char*)&strokeFBOTextureHeight, sizeof(int));
 
 	int pointSize = points.size();
 	file.read((char*)&pointSize, sizeof(int));
 	points.resize(pointSize);
-	file.read((char*)&points[0], sizeof(glm::vec3) * pointSize);
+	if (pointSize != 0)
+		file.read((char*)&points[0], sizeof(glm::vec3) * pointSize);
 
 	int screenPointSize = screenPoints.size();
 	file.read((char*)&screenPointSize, sizeof(int));
 	screenPoints.resize(screenPointSize);
-	file.read((char*)&screenPoints[0], sizeof(glm::vec3) * screenPointSize);
+	if (screenPointSize != 0)
+		file.read((char*)&screenPoints[0], sizeof(glm::vec3) * screenPointSize);
 
 	GLubyte *textureData = new unsigned char[strokeFBOTextureWidth * strokeFBOTextureHeight * 4];
 	file.read((char*)textureData, sizeof(unsigned char) * strokeFBOTextureWidth * strokeFBOTextureHeight * 4);
-	//CreateMesh();
+	SetTexture(loadTextureFromArray(textureData, strokeFBOTextureWidth, strokeFBOTextureHeight, 4));
+	delete[] textureData;
+	
 	if (!file.eof()) {
 		mesh = new MyMesh();
 		int vertexSize;
@@ -977,7 +972,5 @@ void ModelPart::ReadPart(const char* fileName)
 	}
 
 	CreateFrameBuffer(strokeFBOTextureWidth, strokeFBOTextureHeight);
-	SetTexture(loadTextureFromArray(textureData, strokeFBOTextureWidth, strokeFBOTextureHeight, 4));
-	
 	invalidateBuffer = true;
 }
