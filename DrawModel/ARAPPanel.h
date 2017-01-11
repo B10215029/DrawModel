@@ -17,6 +17,13 @@ public:
 	void MouseMove(int x, int y);
 	void MouseWheel(int x, int y, int delta);
 	void SetPart(ModelPart* modelPart);
+	void SelectPoint(int id);
+	void UnselectPoint(int id);
+	void MovePoint(int id, glm::vec2 newPos);
+	void ApplyToPart();
+	void ReadAnimation(const char* fileName);
+	void StartOutputAnimation(const char* fileName);
+	void EndOutputAnimation();
 
 	ModelPart* part;
 
@@ -33,5 +40,8 @@ private:
 	MyMesh mesh;
 	std::vector<glm::vec3> facePointSet;
 	std::vector<int> controlPoint;
+	std::ifstream animationInputStream;
+	std::ofstream animationOutputStream;
+	bool animating;
 };
 

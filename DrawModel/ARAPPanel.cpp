@@ -9,6 +9,7 @@ ARAPPanel::ARAPPanel()
 	part = NULL;
 	zoom = 1;
 	selectPoint = -1;
+	animating = false;
 }
 
 ARAPPanel::~ARAPPanel()
@@ -68,6 +69,36 @@ void ARAPPanel::Display()
 		glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, 0, mesh.point(MyMesh::VertexHandle(controlPoint[i])).data());
 		glDrawArrays(GL_POINTS, 0, 1);
 	}
+	char c;
+	if (animationInputStream.good() && animationInputStream.get(c)) {
+		if (c == 's') {
+			int id;
+			animationInputStream >> id;
+			std::cout << c << id << std::endl;
+			SelectPoint(id);
+		}
+		if (c == 'u') {
+			int id;
+			animationInputStream >> id;
+			std::cout << c << id << std::endl;
+			UnselectPoint(id);
+		}
+		if (c == 'm') {
+			int id;
+			float x, y;
+			animationInputStream >> id >> x >> y;
+			std::cout << c << id << "(" << x << ", " << y << ")" << std::endl;
+			MovePoint(id, glm::vec2(x, y));
+		}
+		if (c == 'a') {
+			int id;
+			std::cout << c << std::endl;
+			ApplyToPart();
+		}
+	}
+	else {
+		animationInputStream.close();
+	}
 }
 
 void ARAPPanel::MouseDown(int x, int y, int button)
@@ -86,9 +117,7 @@ void ARAPPanel::MouseDown(int x, int y, int button)
 		}
 		if (nearestDistance < 0.05) {
 			selectPoint = nearestPoint;
-			if (std::find(controlPoint.begin(), controlPoint.end(), selectPoint) == controlPoint.end()) {
-				controlPoint.push_back(selectPoint);
-			}
+			SelectPoint(selectPoint);
 		}
 		else {
 			selectPoint = -1;
@@ -108,9 +137,7 @@ void ARAPPanel::MouseDown(int x, int y, int button)
 		}
 		if (nearestDistance < 0.05) {
 			selectPoint = -1;
-			if (std::find(controlPoint.begin(), controlPoint.end(), nearestPoint) != controlPoint.end()) {
-				controlPoint.erase(std::find(controlPoint.begin(), controlPoint.end(), nearestPoint));
-			}
+			UnselectPoint(nearestPoint);
 		}
 	}
 
@@ -123,9 +150,7 @@ void ARAPPanel::MouseUp(int x, int y, int button)
 		selectPoint = -1;
 	}
 	if (button == 2) {
-		part->SetPlane(mesh);
-		part->ReExtrude();
-		part->invalidateBuffer = true;
+		ApplyToPart();
 	}
 }
 
@@ -134,15 +159,7 @@ void ARAPPanel::MouseMove(int x, int y)
 	if (selectPoint != -1) {
 		glm::vec2 screenPos((float)x / width * 2 - 1, (float)(height - y) / height * 2 - 1);
 		//std::vector<glm::vec3> &points = part->getContourScreenPoint();
-		mesh.point(MyMesh::VertexHandle(selectPoint))[0] = screenPos.x;
-		mesh.point(MyMesh::VertexHandle(selectPoint))[1] = screenPos.y;
-		facePointSet.clear();
-		for (MyMesh::FaceIter f_it = mesh.faces_begin(); f_it != mesh.faces_end(); ++f_it) {
-			for (MyMesh::FaceVertexIter fv_it = mesh.fv_begin(f_it); fv_it != mesh.fv_end(f_it); ++fv_it) {
-				MyMesh::Point p = mesh.point(fv_it);
-				facePointSet.push_back(glm::vec3(p[0], p[1], p[2]));
-			}
-		}
+		MovePoint(selectPoint, screenPos);
 	}
 }
 
@@ -172,4 +189,67 @@ void ARAPPanel::SetPart(ModelPart* modelPart)
 			facePointSet.push_back(glm::vec3(p[0], p[1], p[2]));
 		}
 	}
+}
+
+void ARAPPanel::SelectPoint(int id)
+{
+	if (std::find(controlPoint.begin(), controlPoint.end(), id) == controlPoint.end()) {
+		std::cout << "Select point " << id << std::endl;
+		if (animating)
+			animationOutputStream << "s " << id << std::endl;
+		controlPoint.push_back(id);
+	}
+}
+
+void ARAPPanel::UnselectPoint(int id)
+{
+	if (std::find(controlPoint.begin(), controlPoint.end(), id) != controlPoint.end()) {
+		std::cout << "Unselect point " << id << std::endl;
+		if (animating)
+			animationOutputStream << "u " << id << std::endl;
+		controlPoint.erase(std::find(controlPoint.begin(), controlPoint.end(), id));
+	}
+}
+
+void ARAPPanel::MovePoint(int id, glm::vec2 newPos)
+{
+	std::cout << "Move point " << id << " to " << newPos.x << ", " << newPos.y << std::endl;
+	if (animating)
+		animationOutputStream << "m " << id << " " << newPos.x << " " << newPos.y << std::endl;
+	mesh.point(MyMesh::VertexHandle(id))[0] = newPos.x;
+	mesh.point(MyMesh::VertexHandle(id))[1] = newPos.y;
+	facePointSet.clear();
+	for (MyMesh::FaceIter f_it = mesh.faces_begin(); f_it != mesh.faces_end(); ++f_it) {
+		for (MyMesh::FaceVertexIter fv_it = mesh.fv_begin(f_it); fv_it != mesh.fv_end(f_it); ++fv_it) {
+			MyMesh::Point p = mesh.point(fv_it);
+			facePointSet.push_back(glm::vec3(p[0], p[1], p[2]));
+		}
+	}
+}
+
+void ARAPPanel::ApplyToPart()
+{
+	std::cout << "Apply to part" << std::endl;
+	if (animating)
+		animationOutputStream << "a" << std::endl;
+	part->SetPlane(mesh);
+	part->ReExtrude();
+	part->invalidateBuffer = true;
+}
+
+void ARAPPanel::ReadAnimation(const char* fileName)
+{
+	animationInputStream.open(fileName);
+}
+
+void ARAPPanel::StartOutputAnimation(const char* fileName)
+{
+	animationOutputStream.open(fileName);
+	animating = true;
+}
+
+void ARAPPanel::EndOutputAnimation()
+{
+	animationOutputStream.close();
+	animating = false;
 }

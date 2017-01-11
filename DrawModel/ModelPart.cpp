@@ -971,6 +971,8 @@ void ModelPart::ReadPart(const char* fileName)
 		}
 	}
 
+	file.close();
+
 	CreateFrameBuffer(strokeFBOTextureWidth, strokeFBOTextureHeight);
 	invalidateBuffer = true;
 }
