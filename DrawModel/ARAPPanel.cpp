@@ -181,6 +181,7 @@ void ARAPPanel::SetPart(ModelPart* modelPart)
 	if (!part)
 		return;
 	mesh = part->GetPlane();
+	baseMesh = mesh;
 	controlPoint.clear();
 	flags.clear();
 	flags.resize(mesh.n_vertices(), false);
@@ -322,14 +323,74 @@ void ARAPPanel::GetGeachTri(MyMesh::FaceHandle fh, Eigen::Matrix<double, 6, 6> &
 	}
 }
 
-void ARAPPanel::GetFeachTri(MyMesh::FaceHandle fh, double K[][4], double F[][4])
+void ARAPPanel::GetFeachTri(MyMesh::FaceHandle fh, Eigen::Matrix<double, 6, 4> &K, Eigen::Matrix<double, 4, 4> &F)
 {
+	// F = K'K
 
+	// Reset F
+	K.setZero();
+	K(0, 0) = K(1, 1) = K(2, 2) = K(3, 3) = 1;
+
+	Eigen::Vector2d v[3];
+	int i = 0;
+	for (MyMesh::FaceVertexIter fv_it = mesh.fv_begin(fh); fv_it != mesh.fv_end(fh); fv_it++, i++) {
+		v[i] = Eigen::Vector2d(mesh.point(fv_it)[0], mesh.point(fv_it)[1]);
+	}
+
+	// First compute x01 and y01;
+	//	xdir = v1-v0, ydir = (-xdir[1], xdir[0]), v2dir = v2-v0
+	//  xdir[0] * x01 + ydir[0] * y01 = v2dir[0]
+	//  xdir[1] * x01 + ydir[1] * y01 = v2dir[1]
+	//
+
+	Eigen::Vector2d xdir = v[1] - v[0];
+	Eigen::Vector2d ydir(-xdir[1], xdir[0]);
+	Eigen::Vector2d v2dir = v[2] - v[0];
+	double det = xdir[0] * ydir[1] - xdir[1] * ydir[0];
+	double x01 = (v2dir[0] * ydir[1] - v2dir[1] * ydir[0]) / det;
+	double y01 = (xdir[0] * v2dir[1] - xdir[1] * v2dir[0]) / det;
+
+	// Now ready for F
+
+	// for v0'
+	K(4, 0) = 1 - x01;
+	K(5, 0) = -y01;
+	K(4, 1) = y01;
+	K(5, 1) = 1 - x01;
+
+	// for v1'
+	K(4, 2) = x01;
+	K(5, 2) = y01;
+	K(4, 3) = -y01;
+	K(5, 3) = x01;
+
+	F = K.transpose() * K;
 }
 
-void ARAPPanel::GetHeachTri(MyMesh::FaceHandle fh, double H[][6])
+void ARAPPanel::GetHeachTri(MyMesh::FaceHandle fh, Eigen::Matrix<double, 6, 6> &H)
 {
+	// Reset H
+	H.setZero();
 
+	// G = tI'tI
+	Eigen::Matrix<double, 2, 6> tI;// [2][6], tIt[6][2], tmpH[6][6];
+
+	for (int i = 0; i < 3; i++) {
+		// Reset tI
+		tI.setZero();
+
+		int i0 = i, i1 = (i + 1) % 3, i2 = (i + 2) % 3;
+
+		// for v0'
+		tI(0, i0 * 2 + 0) = -1;
+		tI(1, i0 * 2 + 1) = -1;
+
+		// for v1'
+		tI(0, i1 * 2 + 0) = 1;
+		tI(1, i1 * 2 + 1) = 1;
+
+		H += tI.transpose() * tI;
+	}
 }
 
 void ARAPPanel::PreComputeG()
@@ -375,12 +436,45 @@ void ARAPPanel::PreComputeG()
 
 void ARAPPanel::PreComputeF()
 {
+	// For each triangle
+	int nt = mesh.n_faces();;
+	F.resize(nt);
+	invF.resize(nt);
+	K.resize(nt);
 
+	int i = 0;
+	for (MyMesh::FaceIter f_it = mesh.faces_begin(); f_it != mesh.faces_end(); f_it++, i++) {
+		GetFeachTri(f_it, K[i], F[i]);
+		invF[i] = F[i].inverse();
+	}
 }
 
 void ARAPPanel::PreComputeH()
 {
+	int nv = flags.size();
+	BigH.resize(nv * 2, nv * 2);
 
+	// For each triangle
+	for (MyMesh::FaceIter f_it = mesh.faces_begin(); f_it != mesh.faces_end(); f_it++) {
+		Eigen::Matrix<double, 6, 6> H;
+		GetHeachTri(f_it, H);
+		int vid[3], vidi = 0;
+		for (MyMesh::FaceVertexIter fv_it = mesh.fv_begin(f_it); fv_it != mesh.fv_end(f_it); fv_it++) {
+			vid[vidi++] = fv_it->idx();
+		}
+
+		for (int j = 0; j < 3; j++)
+			for (int k = 0; k < 3; k++) {
+				if (H(j * 2 + 0, k * 2 + 0) != 0)
+					BigH.coeffRef(vid[j] * 2 + 0, vid[k] * 2 + 0) += H(j * 2 + 0, k * 2 + 0);
+				if (H(j * 2 + 1, k * 2 + 0) != 0)
+					BigH.coeffRef(vid[j] * 2 + 1, vid[k] * 2 + 0) += H(j * 2 + 1, k * 2 + 0);
+				if (H(j * 2 + 0, k * 2 + 1) != 0)
+					BigH.coeffRef(vid[j] * 2 + 0, vid[k] * 2 + 1) += H(j * 2 + 0, k * 2 + 1);
+				if (H(j * 2 + 1, k * 2 + 1) != 0)
+					BigH.coeffRef(vid[j] * 2 + 1, vid[k] * 2 + 1) += H(j * 2 + 1, k * 2 + 1);
+			}
+	}
 }
 
 void ARAPPanel::PreStep1()
@@ -437,12 +531,77 @@ void ARAPPanel::PreStep1()
 	B += G01;
 	
 	Gprime.makeCompressed();
-	linearSolver.compute(Gprime.transpose() * Gprime);
+	linearSolverG.compute(Gprime.transpose() * Gprime);
 }
 
 void ARAPPanel::PreStep2()
 {
+	// Preparing for the memory
+	int nt = mesh.n_faces();
+	C.resize(nt);
+	for (int i = 0; i < nt; i++) {
+		C[i].resize(4);
+	}
+	fittedVertices.resize(nt);
+	for (int i = 0; i < nt; i++) {
+		fittedVertices[i].resize(3);
+	}
 
+	// Compute Hprime and D
+
+	// The map from vertex index to index in the matrix (then multiply by 2)
+	int nv = flags.size(), cur_free = 0, cur_ctrl = 0;
+	std::vector<int> vert_map(nv, 0);
+	for (int i = 0; i < nv; i++) {
+		if (!flags[i])
+			vert_map[i] = cur_free++;
+		else
+			vert_map[i] = cur_ctrl++;
+	}
+
+	if (cur_ctrl == 0 || cur_free == 0)
+		return;
+
+	H00.resize(cur_free * 2, cur_free * 2);
+	H01.resize(cur_free * 2, cur_ctrl * 2);
+	H10.resize(cur_ctrl * 2, cur_free * 2);
+	H11.resize(cur_ctrl * 2, cur_ctrl * 2);
+
+	// For each triangle
+	for (MyMesh::FaceIter f_it = mesh.faces_begin(); f_it != mesh.faces_end(); f_it++) {
+		int vid[3], vidi = 0;
+		for (MyMesh::FaceVertexIter fv_it = mesh.fv_begin(f_it); fv_it != mesh.fv_end(f_it); fv_it++) {
+			vid[vidi++] = fv_it->idx();
+		}
+
+		// assign H's to H00, H01, H10, H11 accordingly
+		for (int j = 0; j < 3; j++)
+			for (int k = 0; k < 3; k++) {
+				Eigen::SparseMatrix<double>* HH = NULL;
+				// Non-zeros could only be the diagonal entries 
+				if (!flags[vid[j]] && !flags[vid[k]])
+					HH = &H00;
+				else if (!flags[vid[j]] && flags[vid[k]])
+					HH = &H01;
+				else if (flags[vid[j]] && !flags[vid[k]])
+					HH = &H10;
+				else // if (flags[t[j]] && flags[t[k]])
+					HH = &H11;
+
+				HH->coeffRef(vert_map[vid[j]] * 2 + 0, vert_map[vid[k]] * 2 + 0) = BigH.coeffRef(vid[j] * 2 + 0, vid[k] * 2 + 0);
+				HH->coeffRef(vert_map[vid[j]] * 2 + 1, vert_map[vid[k]] * 2 + 0) = BigH.coeffRef(vid[j] * 2 + 1, vid[k] * 2 + 0);
+				HH->coeffRef(vert_map[vid[j]] * 2 + 0, vert_map[vid[k]] * 2 + 1) = BigH.coeffRef(vid[j] * 2 + 0, vid[k] * 2 + 1);
+				HH->coeffRef(vert_map[vid[j]] * 2 + 1, vert_map[vid[k]] * 2 + 1) = BigH.coeffRef(vid[j] * 2 + 1, vid[k] * 2 + 1);
+			}
+	}
+
+	Hprime = H00.transpose();
+	Hprime += H00;
+	D = H10.transpose();
+	D += H01;
+
+	Hprime.makeCompressed();
+	linearSolverH.compute(Hprime.transpose() * Hprime);
 }
 
 void ARAPPanel::Step1()
@@ -459,7 +618,7 @@ void ARAPPanel::Step1()
 
 	Bq = -B*q;
 
-	Eigen::MatrixXd u = linearSolver.solve(Gprime.transpose() * Bq);
+	Eigen::MatrixXd u = linearSolverG.solve(Gprime.transpose() * Bq);
 	i = 0;
 	for (MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); v_it++) {
 		if (flags[v_it->idx()])
@@ -471,7 +630,127 @@ void ARAPPanel::Step1()
 
 void ARAPPanel::Step2()
 {
+	// Compute C
 
+	// For each triangle
+	int nt = mesh.n_faces();
+
+	int i = 0;
+	for (MyMesh::FaceIter f_it = mesh.faces_begin(); f_it != mesh.faces_end(); f_it++, i++) {
+		Eigen::Matrix<double, 6, 4> _K;
+		Eigen::Matrix<double, 4, 6> _Kt;
+		_K = K[i];
+
+		_Kt = _K.transpose();
+
+		Eigen::Matrix<double, 6, 1> vprime;
+		int vid[3], vidi = 0;
+		for (MyMesh::FaceVertexIter fv_it = mesh.fv_begin(f_it); fv_it != mesh.fv_end(f_it); fv_it++, vidi++) {
+			vid[vidi] = fv_it->idx();
+			vprime(vidi * 2 + 0, 0) = mesh.point(fv_it)[0];
+			vprime(vidi * 2 + 1, 0) = mesh.point(fv_it)[1];
+		}
+
+		Eigen::Matrix<double, 4, 1> _C_tmp;
+		_C_tmp = _Kt * vprime;
+		for (int j = 0; j < 4; j++)
+			C[i][j] = _C_tmp(j, 0);
+
+		// Compute fitted triangle
+
+		// Also compute the other vertex as well
+		Eigen::Matrix<double, 6, 1> vfit;
+		vfit = _K * (invF[i] * _C_tmp);
+
+		fittedVertices[i][0](0) = vfit(0, 0);
+		fittedVertices[i][0](1) = vfit(1, 0);
+		fittedVertices[i][1](0) = vfit(2, 0);
+		fittedVertices[i][1](1) = vfit(3, 0);
+		fittedVertices[i][2](0) = vfit(4, 0);
+		fittedVertices[i][2](1) = vfit(5, 0);
+
+		// Compute scale and scale back to get congruent triangles
+		// The paper doesn't say anything about how to scale, so I assue
+		// it's around the gravity center
+		Eigen::Vector2d center = (fittedVertices[i][0] + fittedVertices[i][1] + fittedVertices[i][2]) / 3;
+		double scale = (fittedVertices[i][0] - fittedVertices[i][1]).norm() +
+			           (fittedVertices[i][1] - fittedVertices[i][2]).norm() +
+			           (fittedVertices[i][2] - fittedVertices[i][0]).norm();
+		scale /= (baseMesh.point(MyMesh::VertexHandle(vid[0])) - baseMesh.point(MyMesh::VertexHandle(vid[1]))).norm() +
+			     (baseMesh.point(MyMesh::VertexHandle(vid[1])) - baseMesh.point(MyMesh::VertexHandle(vid[2]))).norm() +
+			     (baseMesh.point(MyMesh::VertexHandle(vid[2])) - baseMesh.point(MyMesh::VertexHandle(vid[0]))).norm();
+		
+
+		for (int j = 0; j < 3; j++) {
+			Eigen::Vector2d v = (fittedVertices[i][j] - center) / scale;
+			fittedVertices[i][j] = center + v;
+		}
+	}
+
+	//if (step1_only) return;
+	// The second sub-step of step2
+
+	// Compute q
+	Eigen::MatrixXd q(controlPoint.size() * 2, 1), Dq_plus_f0;
+	int nv = mesh.n_vertices(), cur_free = 0, cur_ctrl = 0;
+
+	std::vector<int> vert_map(nv, 0);
+	for (int i = 0, qi = 0; i < nv; i++) {
+		if (!flags[i])
+			vert_map[i] = cur_free++;
+		else {
+			vert_map[i] = cur_ctrl++;
+			q(qi++) = mesh.point(MyMesh::VertexHandle(i))[0];
+			q(qi++) = mesh.point(MyMesh::VertexHandle(i))[1];
+		}
+	}
+
+	if (cur_ctrl == 0 || cur_free == 0)
+		return;
+
+
+	// Compute f0 and f1
+	Eigen::MatrixXd f(nv * 2, 1), f0(cur_free * 2, 1), f1(cur_ctrl * 2, 1);
+	f.setZero();
+	for (MyMesh::FaceIter f_it = mesh.faces_begin(); f_it != mesh.faces_end(); f_it++) {
+		int vid[3], vidi = 0;
+		for (MyMesh::FaceVertexIter fv_it = mesh.fv_begin(f_it); fv_it != mesh.fv_end(f_it); fv_it++) {
+			vid[vidi++] = fv_it->idx();
+		}
+		std::vector<Eigen::Vector2d>& fitted = fittedVertices[f_it->idx()];
+		for (int i = 0; i < 3; i++) {
+			int j = (i + 1) % 3;
+			Eigen::Vector2d vij_f = fitted[j] - fitted[i];
+			f(2 * vid[i] + 0, 0) += -2 * vij_f[0];
+			f(2 * vid[i] + 1, 0) += -2 * vij_f[1];
+			f(2 * vid[j] + 0, 0) +=  2 * vij_f[0];
+			f(2 * vid[j] + 1, 0) +=  2 * vij_f[1];
+		}
+	}
+	// Map them into f0, f1
+	for (int i = 0; i < nv; i++) {
+		if (flags[i] == 0) {
+			f0(2 * vert_map[i] + 0, 0) = f(2 * i + 0, 0);
+			f0(2 * vert_map[i] + 1, 0) = f(2 * i + 1, 0);
+		}
+		else {
+			f1(2 * vert_map[i] + 0, 0) = f(2 * i + 0, 0);
+			f1(2 * vert_map[i] + 1, 0) = f(2 * i + 1, 0);
+		}
+	}
+
+	// This is Dq
+	Dq_plus_f0 = f0 - D*q;
+
+	Eigen::MatrixXd u = linearSolverH.solve(Hprime.transpose() * Dq_plus_f0);
+	i = 0;
+	for (MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); v_it++) {
+		if (flags[v_it->idx()])
+			continue;
+		//printf("%+02.3lf, %+02.3lf -> %+02.3lf, %+02.3lf : %+02.3lf, %+02.3lf\n", mesh.point(v_it)[0], mesh.point(v_it)[1], u(i), u(i + 1), mesh.point(v_it)[0] - u(i), mesh.point(v_it)[1] - u(i + 1));
+		mesh.point(v_it)[0] = u(i++);
+		mesh.point(v_it)[1] = u(i++);
+	}
 }
 
 void ARAPPanel::Deformation()
