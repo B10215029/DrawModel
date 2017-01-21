@@ -27,6 +27,7 @@ public:
 	void StartOutputAnimation(const char* fileName);
 	void EndOutputAnimation();
 
+	static bool fastMapping;
 	ModelPart* part;
 
 private:

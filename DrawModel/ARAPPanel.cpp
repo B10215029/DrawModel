@@ -5,6 +5,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+bool ARAPPanel::fastMapping = false;
+
 ARAPPanel::ARAPPanel()
 {
 	part = NULL;
@@ -239,6 +241,8 @@ void ARAPPanel::MovePoint(int id, glm::vec2 newPos)
 		}
 	}
 	//fast apply
+	if (fastMapping)
+		part->FastSetPlane(mesh);
 }
 
 void ARAPPanel::ApplyToPart()

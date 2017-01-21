@@ -835,6 +835,60 @@ void ModelPart::SetPlane(MyMesh mesh)
 	*planeMesh = mesh;
 }
 
+void ModelPart::FastSetPlane(MyMesh newPlaneMesh)
+{
+	*planeMesh = newPlaneMesh;
+	glm::mat4 invMvp = glm::inverse(mvp);
+	glm::vec4 np;
+	for (MyMesh::VertexIter vh = planeMesh->vertices_begin(); vh != planeMesh->vertices_end(); ++vh) {
+		MyMesh::Point& p = planeMesh->point(vh);
+		np = invMvp * glm::vec4(p[0], p[1], p[2], 1);
+		planeMesh->point(vh) = MyMesh::Point(np.x / np.w, np.y / np.w, np.z / np.w);
+	}
+
+	for (MyMesh::VertexIter vh = planeMesh->vertices_begin(); vh != planeMesh->vertices_end(); ++vh) {
+		MyMesh::Point& p0 = mesh->point(vh);
+		np = mvp * glm::vec4(p0[0], p0[1], p0[2], 1);
+		p0 = MyMesh::Point(np.x / np.w, np.y / np.w, np.z / np.w);
+		p0[0] = newPlaneMesh.point(vh)[0];
+		p0[1] = newPlaneMesh.point(vh)[1];
+		np = invMvp * glm::vec4(p0[0], p0[1], p0[2], 1);
+		p0 = MyMesh::Point(np.x / np.w, np.y / np.w, np.z / np.w);
+
+		MyMesh::Point& p1 = mesh->point(MyMesh::VertexHandle(vh->idx() + planeMesh->n_vertices()));
+		np = mvp * glm::vec4(p1[0], p1[1], p1[2], 1);
+		p1 = MyMesh::Point(np.x / np.w, np.y / np.w, np.z / np.w);
+		p1[0] = newPlaneMesh.point(vh)[0];
+		p1[1] = newPlaneMesh.point(vh)[1];
+		np = invMvp * glm::vec4(p1[0], p1[1], p1[2], 1);
+		p1 = MyMesh::Point(np.x / np.w, np.y / np.w, np.z / np.w);
+	}
+	std::deque<int> boundaryVertices;
+	boundaryVertices.clear();
+	for (MyMesh::HalfedgeIter he_it = planeMesh->halfedges_begin(); he_it != planeMesh->halfedges_end(); ++he_it) {
+		if (planeMesh->is_boundary(he_it)) {
+			MyMesh::HalfedgeHandle he = he_it.handle();
+			do {
+				boundaryVertices.push_back(planeMesh->from_vertex_handle(he).idx());
+				he = planeMesh->next_halfedge_handle(he);
+			} while (he != he_it.handle());
+			break;
+		}
+	}
+	int divisions = (mesh->n_vertices() - planeMesh->n_vertices() * 2) / boundaryVertices.size();
+	int pvs = planeMesh->n_vertices();//planeVertSize
+	int bvs = boundaryVertices.size();
+	for (int i = 0; i < divisions; i++) {
+		for (int j = 0; j < bvs; j++) {
+			MyMesh::Point& v0 = mesh->point(MyMesh::VertexHandle(boundaryVertices[j]));
+			MyMesh::Point& v1 = mesh->point(MyMesh::VertexHandle(boundaryVertices[j] + pvs));
+			mesh->point(MyMesh::VertexHandle(pvs * 2 + bvs * i + j)) = v0 + (v1 - v0) * ((float)(i + 1) / (divisions + 1));
+		}
+	}
+
+	invalidateBuffer = true;
+}
+
 void ModelPart::SavePart(const char* fileName)
 {
 	std::ofstream file(fileName, std::ofstream::out | std::ofstream::binary);

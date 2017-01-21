@@ -72,6 +72,7 @@ public:
 	void UpdateContourPoint(int pointID = -1);
 	MyMesh GetPlane();
 	void SetPlane(MyMesh mesh);
+	void FastSetPlane(MyMesh newPlaneMesh);
 	void SavePart(const char* fileName);
 	void ReadPart(const char* fileName);
 
